@@ -19,7 +19,10 @@
 #
 # Как теперь разворачивать конфиги на новой машине?
 # chezmoi init https://github.com/ovc/dotfiles.git
-
+# Теперь применяем только то, что нужно
+# chezmoi apply ~/.vimrc ~/.vim
+# Применить только обычные файлы и шаблоны (пропустить скрипты)
+# chezmoi apply --include=files
 
 ARCHIVE="{{ .chezmoi.sourceDir }}/dot_vim.tar.gz"
 VIM_DIR="$HOME/.vim"
