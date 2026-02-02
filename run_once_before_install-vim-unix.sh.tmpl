@@ -16,6 +16,10 @@
 # chezmoi apply ~/.vimrc ~/.vim
 # -n или --dry-run: Показывает, что будет сделано, но не меняет файлы. chezmoi apply -n ~/.vimrc
 # -i или --interactive: Спрашивает подтверждение для каждого изменения. chezmoi apply -i
+#
+# Как теперь разворачивать конфиги на новой машине?
+# chezmoi init https://github.com/ovc/dotfiles.git
+
 
 ARCHIVE="{{ .chezmoi.sourceDir }}/dot_vim.tar.gz"
 VIM_DIR="$HOME/.vim"
