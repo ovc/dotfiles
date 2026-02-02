@@ -1,0 +1,30 @@
+{{ if eq .chezmoi.os "windows" -}}
+# Хэш архива: {{ include "dot_vim.tar.gz" | sha256sum }}
+
+$archive = Join-Path "{{ .chezmoi.sourceDir }}" "dot_vim.tar.gz"
+$vimDir = Join-Path $HOME ".vim"
+$vimrcPath = Join-Path $HOME ".vimrc"
+$vimrcLink = Join-Path $HOME "_vimrc"
+
+# 1. Распаковка архива
+if (Test-Path $archive) {
+    $isEmpty = $true
+    if (Test-Path $vimDir) {
+        if ((Get-ChildItem -Path $vimDir).Count -gt 0) { $isEmpty = $false }
+    }
+
+    if ($isEmpty) {
+        Write-Host ">>> [Windows] .vim is empty. Extracting..." -ForegroundColor Cyan
+        if (-not (Test-Path $vimDir)) { New-Item -Path $vimDir -ItemType Directory | Out-Null }
+        tar -xzf $archive -C $HOME
+    }
+}
+
+# 2. Создание симлинка _vimrc (Windows style)
+if (Test-Path $vimrcPath) {
+    if (-not (Test-Path $vimrcLink)) {
+        Write-Host ">>> [Windows] Creating _vimrc link..." -ForegroundColor Cyan
+        New-Item -ItemType SymbolicLink -Path $vimrcLink -Target $vimrcPath | Out-Null
+    }
+}
+{{ end -}}

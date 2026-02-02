@@ -1,0 +1,1629 @@
+" Vim has a ctrl-6 binding that allows you go to previously edited file.
+
+set nocompatible
+set encoding=utf-8      " The encoding displayed.
+set fileencodings=utf-8,cp1251,koi8-r,latin1 " The encoding written to file.
+
+syntax on
+
+if has ("autocmd")
+  " File type detection. Indent based on filetype. Recommended.
+  filetype plugin indent on
+endif
+
+" Omni completion <C-X><C-O> <C-N><C-P>
+" set omnifunc=syntaxcomplete#Complete
+
+" set autoindent  " The autoindent setting causes Vim to indent new lines by a similar amount to the one next to them
+" set autowrite   "  The autowrite setting tells Vim to write the old file out when switching from one file to another
+
+set ts=2   " tabstop - set tabstop to tell vim how many columns a tab counts for. Linux kernel code expects each tab to be eight columns wide. Visual Studio expects each tab to be four columns wide. This is the only command here that will affect how existing text displays.
+set sts=2  " softtabstop - set softtabstop to control how many columns vim uses when you hit Tab in insert mode. If softtabstop is less than tabstop and expandtab is not set, vim will use a combination of tabs and spaces to make up the desired spacing. If softtabstop equals tabstop and expandtab is not set, vim will always use tabs. When expandtab is set, vim will always use the appropriate number of spaces.
+set sw=2   " shiftwidth - set shiftwidth to control how many columns text is indented with the reindent operations (<< and >>) and automatic C-style indentation.
+set et     " expandtab noet - when expandtab is set, hitting Tab in insert mode will produce the appropriate number of spaces.
+
+" https://groups.google.com/forum/#!topic/vim_use/ePYOoqKAdck
+" set tw=0     " textwidth - maximum width of text that is being inserted.  A longer line will be broken after white space to get this width.
+" set tw=2147483647
+au FileType text :set tw=0
+au FileType python :set tabstop=8 expandtab shiftwidth=4 softtabstop=4
+" :verbose set tw?
+" Check in /etc/vim/vimrc for tw=78 if need it
+
+" :se ts=4 sw=4 noet| retab!
+" :set ts=4 sw=4
+" set viminfo^=!
+
+" set list
+set nolist
+" F3: Toggle list (display unprintable characters).
+nnoremap <F3> :set list!<CR>
+
+" Set path recursive
+set path+=**
+
+" vi compatiable, set $ to line end, when changing text
+" se cpo+=$
+
+" Display Hidden Characters
+" http://vim.wikia.com/wiki/See_the_tabs_in_your_file
+" Makes :set list (visible whitespace) prettier:
+" set listchars=tab:\|\ ,eol:¬,extends:❯,precedes:❮
+set listchars=tab:\|·,eol:¬,extends:❯,precedes:❮
+" set listchars=tab:\|\ ,eol:¬,extends:❯,precedes:❮
+" set listchars=eol:$,tab:>-,trail:~,extends:>,precedes:<
+" set listchars=tab:>\ ,trail:-,extends:>,precedes:<,nbsp:+
+" set listchars=tab:>-
+" set listchars=tab:!·,trail:·
+" set listchars=eol:¬,tab:▸\
+
+" Test only: what is it?:
+if has('path_extra')
+  setglobal tags-=./tags tags-=./tags; tags^=./tags;
+endif
+
+" Test only: what is it?:
+if has('path_extra')
+  setglobal tags-=./tags tags-=./tags; tags^=./tags;
+endif
+
+" set tags+=gems.tags
+" bundle list --paths=true | xargs ctags -f gems.tags --extra=+f --exclude=.git --exclude=public --exclude=tmp --exclude="*.js" --exclude=log -R *
+" bundle list --paths=true | xargs ctags -f gems.tags --extra=+f --exclude=.git --exclude=public --exclude=tmp --exclude="*.js" --exclude=log -R *
+" :Ctags
+" ctags -R .
+
+" Allow color schemes to do bright colors without forcing bold:
+" if &t_Co == 8 && $TERM !~# '^linux'
+"   set t_Co=16
+" endif
+
+" Automatically read file if it changed outside of vim
+set autoread
+" Triger `autoread` when files changes on disk
+" https://unix.stackexchange.com/questions/149209/refresh-changed-content-of-file-opened-in-vim/383044#383044
+" https://vi.stackexchange.com/questions/13692/prevent-focusgained-autocmd-running-in-command-line-editing-mode
+autocmd FocusGained,BufEnter,CursorHold,CursorHoldI * if mode() != 'c' | checktime | endif
+" Notification after file change
+" https://vi.stackexchange.com/questions/13091/autocmd-event-for-autoread
+autocmd FileChangedShellPost *
+  \ echohl WarningMsg | echo "File changed on disk. Buffer reloaded." | echohl None
+
+" Number of pixel lines inserted between characters.
+set linespace=0
+
+" Always show at least one line above/below the cursor:
+set scrolloff=1
+set sidescrolloff=5
+
+" To load proper ruby
+" set shell=/bin/sh
+
+" Raise a dialog asking if you wish to save the current buffer:
+set confirm
+" Any buffer can be hidden (keeping its changes) without first writing it:
+" set hidden
+
+" https://shapeshed.com/vim-netrw/
+let g:netrw_banner = 1
+
+"" Display filename in vim:
+set titlestring=%t%(\ %M%)%(\ (%{expand(\"%:p:h\")})%)%(\ %a%)\ -\ %{v:servername}
+
+" ==============================================================================
+
+" {{{ Set `ag` as vimgrep:
+" https://www.reddit.com/r/vim/comments/5oqu9t/best_way_to_search_all_files_in_current_directory/
+" https://www.reddit.com/r/vim/comments/5lm3v3/creating_your_own_agvim_script/?st=iy3a2xra&sh=606f1cc7
+if executable('ag')
+		set grepprg=ag\ --nogroup\ --nocolor\ --vimgrep
+		set grepformat^=%f:%l:%c:%m
+endif
+augroup quickfix
+		autocmd!
+
+		autocmd QuickFixCmdPost [^l]* cwindow
+		autocmd QuickFixCmdPost l*    lwindow
+		autocmd VimEnter        *     cwindow
+augroup END
+" }}}
+
+" ==============================================================================
+
+" {{{ OS based configuration:
+" :help exists()
+" :help has()
+" :help feature-list
+if has("gui_running")
+  " the GUI is running or about to start
+  " let's set a good-looking font
+  if has("gui_macvim")
+    set guifont=Menlo\ Regular:h14
+  elseif has("gui_win32") || has('win32') || has('win64')
+    set rtp+=~/vimfiles
+    runtime bundle/vim-pathogen/autoload/pathogen.vim
+    execute pathogen#infect('bundle/{}')
+    " in win %userprofile%\_vimrc
+    let $VIMHOME = $HOME."/vimfiles/"
+    language English_United States
+    set go+=c "use console dialogs instead of popup
+    set guifont=Consolas:h13:cANSI
+    " set guifont=Inconsolata\ for\ Powerline\ 11
+    " set guifont=Liberation\ Mono\ for\ Powerline\ 12
+    " set guifont=Fira_Mono:h12:cRUSSIAN
+    set guioptions-=m  "remove menu bar
+    set guioptions-=T  "remove toolbar
+    set guioptions-=r  "remove right-hand scroll bar
+    set guioptions-=L  "remove left-hand scroll bar
+    " set clipboard=unnamed
+    set directory=.,$TEMP  "http://cfc.kizzx2.com/index.php/gvim-e303-unable-to-open-swap-file-for-no-name-recovery-impossible/
+    set cryptmethod=blowfish2
+    " let g:airline_powerline_fonts = 0
+  elseif has("gui_gtk2") || has("gui_gtk3")
+    let $VIMHOME = $HOME."/.vim/"
+    set runtimepath+=~/.vim,$VIM/vimfiles,$VIMRUNTIME
+    set go+=c "use console dialogs instead of popup
+    " set guifont=Lucida\ Console\ 8
+    "!set guifont=Liberation\ Mono\ for\ Powerline\ 12
+    " set guifont=Hack\ 12
+    " set guifont=Fira\ Mono\ for\ Powerline\ 12
+    " set guifont=Fira\ Mono\ 12
+    let hostname = substitute(system('hostname'), '\n', '', '')
+    if hostname == "zen"
+      set guifont=mononoki\ Nerd\ Font\ Mono\ 12
+    elseif hostname == "knight"
+      set guifont=mononoki\ Nerd\ Font\ Mono\ 16
+    endif
+    " set guifont=mononoki\ Nerd\ Font\ Mono\ 16
+    " set clipboard=unnamedplus
+    set cryptmethod=blowfish2
+    set guioptions-=m  "remove menu bar
+    set guioptions-=T  "remove toolbar
+    set guioptions-=r  "remove right-hand scroll bar
+    set guioptions-=L  "remove left-hand scroll bar
+    " let g:airline_powerline_fonts = 1
+  elseif has("gui_kde")
+    set guifont=Lucida\ Console/8
+  elseif has("x11")
+    let $VIMHOME = $HOME."/.vim/"
+    set runtimepath+=~/.vim,$VIM/vimfiles,$VIMRUNTIME
+    " set clipboard=unnamedplus
+    set cryptmethod=blowfish2
+  else
+    set guifont=Lucida_Console:h8:cDEFAULT
+  endif
+  " let's maximize the gvim window
+  set lines=99999 columns=99999
+else
+  " let g:airline_powerline_fonts = 1
+  " this is console vim
+  " console vim can never change its font
+  " not every console vim can resize itself
+  " if exists("+lines")
+  "   set lines=60
+  " endif
+  " if exists("+columns")
+  "   set columns=80
+  " endif
+endif
+" }}}
+
+" Little Fix for WSL in the way to turn on the Plug:
+" let hostname = substitute(system('hostname'), '\n', '', '')
+" if hostname == "ZEN"
+"   runtime bundle/vim-pathogen/autoload/pathogen.vim
+"   execute pathogen#infect('bundle/{}')
+"   set cryptmethod=blowfish2
+" elseif hostname == "pooh"
+"   set cryptmethod=blowfish2
+" endif
+
+" https://vi.stackexchange.com/questions/2572/detect-os-in-vimscript
+let uname = substitute(system('uname'), '\n', '', '')
+
+" ==============================================================================
+
+" {{{ Plugin configuration:
+if has("x11") || uname == "Linux"
+
+  call plug#begin('~/.vim/bundle') " vim-plug https://github.com/junegunn/vim-plug
+
+" Make sure you use single quotes
+" Plug 'junegunn/seoul256.vim'
+" Plug 'sickill/vim-monokai'
+Plug 'morhetz/gruvbox' "Good colo
+Plug 'https://github.com/nanotech/jellybeans.vim' "Good colo
+"
+" Plug 'https://github.com/chriskempson/base16-vim'
+" Plug 'https://github.com/altercation/vim-colors-solarized'
+" Plug 'https://github.com/lifepillar/vim-solarized8'
+" Plug 'romainl/Apprentice' "Good colo
+" Plug 'jlesquembre/peaksea'
+" Plug 'wimstefan/Lightning'
+"
+" Plug 'therubymug/vim-pyte'  "Light
+" Plug 'acarapetis/vim-colors-github'
+" Plug 'vim-scripts/donbass.vim'
+" Plug 'vim-scripts/mayansmoke' "Light
+
+" Group dependencies, vim-snippets depends on ultisnips
+" Plug 'SirVer/ultisnips' | Plug 'honza/vim-snippets'
+"
+" Super simple vim plugin to show the list of buffers in the command bar
+" Plug 'bling/vim-bufferline'
+
+" Extended % matching for HTML, LaTeX, and many other languages
+Plug 'https://github.com/vim-scripts/matchit.zip'
+
+" Zoom in/out of windows (toggle between one window and multi-window)
+Plug 'https://github.com/vim-scripts/ZoomWin'
+" <c-w>o : the current window zooms
+" <c-w>o again: the previous set of windows is restored
+
+"!!! Vim plugin to list, select and switch between buffers
+" Plug 'https://github.com/jeetsukumaran/vim-buffergator'
+" <Leader>b
+" <space>
+
+" Show Match 123 of 456 /search term/ in Vim searches
+Plug 'https://github.com/henrik/vim-indexed-search'
+
+" Send a vim buffer through a command and instantly see the output
+" Plug 'https://github.com/krisajenkins/vim-pipe'
+
+" Vim plugin for the Perl module / CLI script 'ack'
+Plug 'https://github.com/mileszs/ack.vim'
+" :Ack [options] {pattern} [{directories}]
+" ?    a quick summary of these keys, repeat to close
+" o    to open (same as Enter)
+" O    to open and close the quickfix window
+" go   to preview file, open but maintain focus on ack.vim results
+" t    to open in new tab
+" T    to open in new tab without moving to it
+" h    to open in horizontal split
+" H    to open in horizontal split, keeping focus on the results
+" v    to open in vertical split
+" gv   to open in vertical split, keeping focus on the results
+" q    to close the quickfix window
+
+" This plugin is inspired by the Narrowing feature of Emacs and means to focus on a selected region
+" Plug 'https://github.com/chrisbra/NrrwRgn'
+" <Leader>nr # Open the current visual selection in a new narrowed window
+
+"!!! True Sublime Text style multiple selections for Vim
+" Plug 'https://github.com/terryma/vim-multiple-cursors'
+
+" This plugin causes all trailing whitespace to be highlighted in red.
+Plug 'https://github.com/bronson/vim-trailing-whitespace'
+" just call :FixWhitespace
+
+" !! Provides insert mode auto-completion for quotes, parens, brackets, etc.
+Plug 'https://github.com/Raimondi/delimitMate'
+
+" !! Provides insert mode auto-completion for quotes, parens, brackets, etc.
+" Plug 'https://github.com/vim-scripts/Rename'
+
+" Vim sugar for the UNIX shell commands that need it the most. Features include:
+Plug 'https://github.com/tpope/vim-eunuch'
+"
+" 		:Remove: Delete a buffer and the file on disk simultaneously.
+" 		:Unlink: Like :Remove, but keeps the now empty buffer.
+" 		:Move: Rename a buffer and the file on disk simultaneously.
+" 		:Rename: Like :Move, but relative to the current file's containing directory.
+" 		:Chmod: Change the permissions of the current file.
+" 		:Mkdir: Create a directory, defaulting to the parent of the current file.
+" 		:Find: Run find and load the results into the quickfix list.
+" 		:Locate: Run locate and load the results into the quickfix list.
+" 		:Wall: Write every open window. Handy for kicking off tools like guard.
+" 		:SudoWrite: Write a privileged file with sudo.
+" 		:SudoEdit: Edit a privileged file with sudo.
+" 		File type detection for sudo -e is based on original file name.
+" 		New files created with a shebang line are automatically made executable.
+" 		New init scripts are automatically prepopulated with /etc/init.d/skeleton.
+
+" Plugin causes all trailing whitespace characters
+" Plug 'https://github.com/ntpeters/vim-better-whitespace'
+" To clean extra whitespace, call: :StripWhitespace
+" To toggle whitespace highlighting on/off, call: :ToggleWhitespace
+
+" EasyMotion provides a much simpler way to use some motions in vim
+" Plug 'https://github.com/easymotion/vim-easymotion'
+" All motions will then be triggered with <Leader> by default, e.g. <Leader><Leader>s/f, <Leader><Leader>gE
+
+" On-demand loading
+"Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
+"Plug 'tpope/vim-fireplace', { 'for': 'clojure' }
+
+" Using git URL
+"Plug 'https://github.com/junegunn/vim-github-dashboard.git'
+
+" Plugin options
+"Plug 'nsf/gocode', { 'tag': 'v.20150303', 'rtp': 'vim' }
+
+" Plugin outside ~/.vim/plugged with post-update hook
+" Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': 'yes \| ./install' }
+" Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+Plug 'junegunn/fzf.vim'
+" Preview window on the upper side of the window with 40% height,
+" hidden by default, ctrl-/ to toggle
+" let g:fzf_preview_window = ['up:40%:hidden', 'ctrl-/']
+let g:fzf_preview_window = ['up:40%', 'ctrl-/']
+
+" Vim's diff mode for directories!
+Plug 'will133/vim-dirdiff'
+
+Plug 'frazrepo/vim-rainbow'
+let g:rainbow_active = 1
+
+" Unmanaged plugin (manually installed and updated)
+"Plug '~/my-prototype-plugin'
+
+" vim-ledger
+"https://github.com/ledger/vim-ledger
+
+" Plug 'tpope/vim-sensible'
+
+" Screen:
+" Install the application Screen, then run:
+" cd ~/.vim/bundle
+" git clone https://github.com/ervandew/screen.git
+
+" Vimux:
+" Install Tmux, then run:
+" Plug 'https://github.com/benmills/vimux.git'
+
+" Adds file type glyphs/icons to many popular Vim plugins such as: NERDTree, vim-airline, unite, vim-startify and many more:
+" Plug 'https://github.com/ryanoasis/vim-devicons'
+
+" Seamless navigation between tmux panes and vim splits
+" Plug 'https://github.com/christoomey/vim-tmux-navigator'
+" Plug 'christoomey/vim-tmux-navigator'
+
+" http://www.behaveonrails.com/?p=147
+" Maximizes and restores the current window in Vim:
+Plug 'https://github.com/szw/vim-maximizer'
+
+" Simple tmux statusline generator with support for powerline symbols and statusline / airline / lightline integration:
+" Plug 'https://github.com/edkolev/tmuxline.vim'
+
+" Deliberate Practice lessons for learning the Vim Editor
+" Plug 'canadaduane/VimKata' " Didn't work
+" :VimKata <belt>
+" where <belt> is a color such as white, yellow, green, blue, red, or black.
+
+" A light and configurable statusline/tabline for Vim
+" Plug 'https://github.com/itchyny/lightline.vim'
+"
+" let g:lightline = {
+"   \     'active': {
+"   \         'left': [['mode', 'paste' ], ['readonly', 'filename', 'modified']],
+"   \         'right': [['lineinfo'], ['percent'], ['fileformat', 'fileencoding']]
+"   \     }
+"   \ }
+
+" Plug 'https://github.com/bling/vim-airline.git'
+
+" Vim plugin which allows you to use <Tab> for all your insert completion needs
+" Plug 'https://github.com/ervandew/supertab'
+
+" Complementary pairs of mappings [<Space> and ]<Space> etc...
+Plug 'https://github.com/tpope/vim-unimpaired'
+
+" Super easy to install plugins and runtime files:
+Plug 'https://github.com/tpope/vim-pathogen.git'
+
+" https://github.com/tpope/vim-surround
+" Plug 'https://github.com/tpope/vim-surround.git'
+
+" Best Git wrapper:
+Plug 'https://github.com/tpope/vim-fugitive.git'
+
+" A Vim plugin which shows a git diff in the gutter:
+" Plug 'https://github.com/airblade/vim-gitgutter'
+
+" Plug 'https://github.com/fholgado/minibufexpl.vim'
+
+" Wisely add end in ruby, endfunction/endif/more in vim script, etc
+" Plug 'https://github.com/tpope/vim-endwise'
+
+" True Sublime Text style multiple selections for Vim:
+" https://github.com/terryma/vim-multiple-cursors.git
+
+" Plug 'https://github.com/freitass/todo.txt-vim.git'
+
+" Simple todo in Vim
+" Conflicted with comma in insert mode needed remap default keys
+" Plug 'https://github.com/vitalk/vim-simple-todo'
+" ,,d - create new todo under cursor
+" ,,D - create new todo for current line
+" ,,x - toggle todo mark done/undone
+
+" Plug 'https://github.com/vimwiki/vimwiki'
+
+"http://bling.github.io/blog/2013/06/02/unite-dot-vim-the-plugin-you-didnt-know-you-need/
+" Plug 'https://github.com/ctrlpvim/ctrlp.vim'
+" Run :CtrlP or :CtrlP [starting-directory] to invoke CtrlP in find file mode.
+" Run :CtrlPBuffer or :CtrlPMRU to invoke CtrlP in find buffer or find MRU file mode.
+" Run :CtrlPMixed to search in Files, Buffers and MRU files at the same time.
+"
+" Once CtrlP is open:
+"
+" Press <F5> to purge the cache for the current directory to get new files, remove deleted files and apply new ignore options.
+" Press <c-f> and <c-b> to cycle between modes.
+" Press <c-d> to switch to filename only search instead of full path.
+" Press <c-r> to switch to regexp mode.
+" Use <c-j>, <c-k> or the arrow keys to navigate the result list.
+" Use <c-t> or <c-v>, <c-x> to open the selected entry in a new tab or in a new split.
+" Use <c-n>, <c-p> to select the next/previous string in the prompt's history.
+" Use <c-y> to create a new file and its parent directories.
+" Use <c-z> to mark/unmark multiple files and <c-o> to open them.
+"
+" Run :help ctrlp-mappings or submit ? in CtrlP for more mapping help.
+"
+" let g:ctrlp_map = '<c-p>'
+" let g:ctrlp_cmd = 'CtrlP'
+
+" http://joshldavis.com/2014/04/05/vim-tab-madness-buffers-vs-tabs/
+
+" Vim plugin to list, select and switch between buffers.
+" https://github.com/jeetsukumaran/vim-buffergator
+
+" Plugin for escape ANSI sequences
+" Plug 'vim-scripts/AnsiEsc.vim'
+
+" Sparkup lets you write HTML code faster
+" " #header > h1 then press <C-E> in insert mode to expand to HTML.
+" " Pressing <C-n> will cycle through empty elements. Zen HTML
+" Plug 'https://github.com/rstacruz/sparkup.git', { 'rtp': 'vim' }
+
+" Vim plug-in which provides support for expanding abbreviations
+" Plug 'mattn/emmet-vim'
+
+" VimSafe - A VIM Password Safe (Vault) like tool (WIP)
+" Plug 'https://github.com/antenore/vim-safe'
+
+"Plug 'Shougo/unite.vim'
+""Plug 'Shougo/vimproc.vim'
+
+" A vim plugin for running your Ruby/Rails tests
+"Plug 'https://github.com/skalnik/vim-vroom'
+
+" Notes plugins
+"Plug 'https://github.com/vitalk/vim-simple-todo.git'
+"Plug 'https://github.com/mivok/vimtodo.git'
+"Plug 'https://github.com/freitass/todo.txt-vim.git'
+
+" Need for org mode
+"Plug 'https://github.com/tpope/vim-speeddating.git'
+"Plug 'https://github.com/jceb/vim-orgmode.git'
+
+" Vim distribution
+" https://github.com/carlhuda/janus
+
+" YADR - The best vim,git,zsh plugins and the cleanest vimrc you've ever seen
+" http://skwp.github.com/dotfiles
+" https://github.com/skwp/dotfiles
+
+"Plug 'https://ovc:PaSsw0Rd@bitbucket.org/ovc/briefcase.git'
+
+Plug 'https://github.com/jamessan/vim-gnupg.git'
+
+Plug 'https://github.com/godlygeek/tabular.git'
+
+" Comment functions so powerful—no comment necessary
+" [count]<leader>cc |NERDComComment|
+" [count]<leader>cu |NERDComUncommentLine|
+" [count]<leader>c<space> |NERDComToggleComment|
+Plug 'https://github.com/scrooloose/nerdcommenter'
+
+" Vim plug-in which provides support for expanding abbreviations http://emmet.io/
+" Plug 'https://github.com/mattn/emmet-vim'
+" Type <c-y>,
+" If you don't want to enable emmet in all modes, you can use set these options in vimrc:
+"     let g:user_emmet_mode='n'    "only enable normal mode functions.
+"     let g:user_emmet_mode='inv'  "enable all functions, which is equal to
+"     let g:user_emmet_mode='a'    "enable all function in all mode.
+" Enable just for html/css
+"     let g:user_emmet_install_global = 0
+"     autocmd FileType html,css EmmetInstall
+
+" !!!!!! INSTAL IT:
+" https://masteruby.github.io/productivity-booster/2014/05/02/vim-plugins-for-ruby.html
+
+" Plug 'https://github.com/Valloric/YouCompleteMe.git'
+
+" rails.vim: Ruby on Rails power tools:
+" Plug 'https://github.com/tpope/vim-rails'
+
+" rake.vim: it's like rails.vim without the rails
+" Plug 'https://github.com/tpope/vim-rake'
+
+" Minimal rbenv support:
+" Plug 'https://github.com/tpope/vim-rbenv'
+
+" http://www.salsify.com/blog/engineering/using-vim-tmux-for-ruby-on-rails
+
+" This is a lightweight RSpec runner for Vim
+" Plug 'https://github.com/thoughtbot/vim-rspec'
+
+" Lightweight support for Ruby's Bundler:
+" Plug 'https://github.com/tpope/vim-bundler'
+
+" Automated tag generation and syntax highlighting in Vim:
+" Plug 'https://github.com/xolox/vim-easytags' | Plug 'https://github.com/xolox/vim-misc'
+
+" Vim/Ruby Configuration Files:
+" Plug 'https://github.com/vim-ruby/vim-ruby'
+
+" Browse Ruby RSpec and Rails API docs quickly with Vim:
+" Plug 'https://github.com/lucapette/vim-ruby-doc'
+" In Normal mode, when your cursor is on something you would look up type:
+" RB for Ruby
+" RS for RSpec
+" RR for Rails
+
+" This plugin lets you search and navigate Ruby library and gem documentation inside Vim:
+" Plug 'https://github.com/danchoi/ri.vim'
+" ,r opens the search/autocomplete window, and will use a horizontal split to display matching documentation
+" ,R opens the search/autocomplete window, and will use a vertical split to display matching documentatoin
+" ,K opens the search/autocomplete window and prefills it with the keyword under the cursor
+" K is automatically remapped to use ri.vim if the current buffer is a *.rb file
+
+" Multi-language DBGP debugger client for Vim (PHP, Python, Perl, Ruby, etc.):
+" Plug 'https://github.com/joonty/vdebug'
+
+" A tree explorer plugin for vim:
+" Plug 'https://github.com/scrooloose/nerdtree'
+
+" Syntax checking plugin for Vim:
+" Plug 'https://github.com/vim-syntastic/syntastic'
+
+" A Vim plugin that manages your tag files:
+" Plug 'https://github.com/ludovicchabant/vim-gutentags'
+
+" Plug 'https://github.com/majutsushi/tagbar'
+
+" Provide easy code formatting in Vim by integrating existing code formatters:
+" Plug 'https://github.com/chiel92/vim-autoformat'
+" rubocop for Ruby. It can be installed by running gem install rubocop. Here is the link to the repository: https://github.com/bbatsov/rubocop
+" emerge -av app-text/htmltidy # for HTML, XHTML and XML. It's probably in your distro's repository, so you can download it as a regular package
+" emerge -av dev-ruby/sass #
+" $ pip install jsbeautifier; $ js-beautify file.js
+" sudo emerge -av dev-perl/Perl-Tidy
+
+" A Vim plugin for visually displaying indent levels in code:
+" Plug 'https://github.com/nathanaelkane/vim-indent-guides'
+
+" A vim plugin to display the indention levels with thin vertical lines:
+" Plug 'https://github.com/yggdroot/indentline'
+
+" Perl IDE -- Write and run Perl-scripts using menus and hotkeys
+" Plug 'https://github.com/WolfgangMehner/perl-support'
+" http://lug.fh-swf.de/vim/vim-perl/perl-hot-keys.pdf
+
+" Support for Perl 5 and Perl 6 in Vim
+" Plug 'https://github.com/vim-perl/vim-perl'
+
+" Perl omnicompletion for vim
+" Plug 'https://github.com/c9s/perlomni.vim'
+
+" Interface to perldoc. you can get perldoc with integrated operation for vim
+" Plug 'https://github.com/hotchpotch/perldoc-vim'
+
+" jedi-vim - awesome Python autocompletion with VIM
+" Plug 'https://github.com/davidhalter/jedi-vim'
+
+" http://www.behaveonrails.com/?p=147
+" Asynchronous test runs with Dispatch.vim and Tmux
+" https://www.sitepoint.com/10-killer-tmux-tips/
+" Plug 'https://github.com/tpope/vim-dispatch'
+
+" INSTALL PATHOGEN AS PLUG MANAGER
+"Plug 'https://github.com/moll/vim-node.git'
+
+"Plug 'teranex/vimwiki-tasks'
+
+
+" https://vimawesome.com/plugin/vim-terraform-completion
+"
+" (Optinal) for Tag Sidebar
+" Plug 'majutsushi/tagbar'
+
+Plug 'hashivim/vim-terraform'
+" Plug 'vim-syntastic/syntastic'
+" Plug 'juliosueiras/vim-terraform-completion'
+" call plug#end()
+"
+" " Syntastic Config
+" set statusline+=%#warningmsg#
+" set statusline+=%{SyntasticStatuslineFlag()}
+" set statusline+=%*
+"
+" let g:syntastic_always_populate_loc_list = 1
+" let g:syntastic_auto_loc_list = 1
+" let g:syntastic_check_on_open = 1
+" let g:syntastic_check_on_wq = 0
+"
+" " (Optional)Remove Info(Preview) window
+" set completeopt-=preview
+"
+" " (Optional)Hide Info(Preview) window after completions
+" autocmd CursorMovedI * if pumvisible() == 0|pclose|endif
+" autocmd InsertLeave * if pumvisible() == 0|pclose|endif
+"
+" " (Optional) Enable terraform plan to be include in filter
+" let g:syntastic_terraform_tffilter_plan = 1
+"
+" " (Optional) Default: 0, enable(1)/disable(0) plugin's keymapping
+" let g:terraform_completion_keys = 1
+"
+" " (Optional) Default: 1, enable(1)/disable(0) terraform module registry completion
+" let g:terraform_registry_module_completion = 0
+
+" ================================================================================
+     call plug#end()
+
+" vim-airline
+let g:airline#extensions#tabline#enabled = 1
+" let g:airline_powerline_fonts = 1
+if !exists('g:airline_symbols')
+  let g:airline_symbols = {}
+endif
+let g:airline_symbols.space = "\ua0"
+" disable arrows
+" let g:airline_left_sep=''
+" let g:airline_right_sep=''
+
+" CtrlP configuration:
+" Setup some default ignores
+let g:ctrlp_custom_ignore = {
+  \ 'dir':  '\v[\/](\.(git|hg|svn)|\_site)$',
+  \ 'file': '\v\.(exe|so|dll|class|png|jpg|jpeg)$',
+\}
+
+" Use the nearest .git directory as the cwd
+" This makes a lot of sense if you are working on a project that is in version
+" control. It also supports works with .svn, .hg, .bzr.
+let g:ctrlp_working_path_mode = 'r'
+
+" let g:ctrlp_show_hidden = 1
+
+" vim-simple-todo disable default key bindings
+" let g:simple_todo_map_keys = 0
+" nmap ,,d <Plug>(simple-todo-new)
+" nmap ,,D <Plug>(simple-todo-new-start-of-line)
+" nmap ,,x <Plug>(simple-todo-mark-switch)
+" vmap ,,d <Plug>(simple-todo-new-start-of-line)
+" vmap ,,x <Plug>(simple-todo-mark-switch)
+
+" Syntastic configuration:
+" set statusline+=%#warningmsg#
+" set statusline+=%{SyntasticStatuslineFlag()}
+" set statusline+=%*
+"
+" let g:syntastic_always_populate_loc_list = 1
+" let g:syntastic_auto_loc_list = 1
+" let g:syntastic_check_on_open = 1
+" let g:syntastic_check_on_wq = 0
+" let g:syntastic_enable_perl_checker = 1
+
+let g:ackprg = 'ag --nogroup --nocolor --column'
+" let g:ackprg = 'ag --vimgrep'
+" Which has the same effect but will report every match on the line.
+
+let g:NERDSpaceDelims = 1
+" let g:NERDCustomDelimiters = { 'c': { 'left': '/**','right': '*/' } }
+
+" let g:maximizer_default_mapping_key = '<F11>'
+
+
+" let g:ycm_key_list_select_completion = ['<Down>']
+" let g:ycm_key_list_previous_completion = ['<Up>']
+
+" http://www.salsify.com/blog/engineering/using-vim-tmux-for-ruby-on-rails
+"
+" Make YCM compatible with UltiSnips (using supertab)
+" let g:ycm_key_list_select_completion = ['<C-j>']
+" let g:ycm_key_list_previous_completion = ['<C-k>']
+" let g:SuperTabDefaultCompletionType = '<C-j>'
+
+" UltiSnips directory
+" let g:UltiSnipsSnippetDirectories=["UltiSnips"]
+" let g:UltiSnipsExpandTrigger="<tab>"
+" let g:UltiSnipsJumpForwardTrigger="<tab>"
+" let g:UltiSnipsJumpBackwardTrigger="<s-tab>"
+
+" let g:NERDTreeWinPos = "left"
+
+" let g:indent_guides_start_level = 2
+" let g:indent_guides_guide_size = 2
+
+" F5: Autoformat with external plugin
+" noremap <F5> :Autoformat<CR>
+" au BufWrite * :Autoformat
+
+"let g:vimwiki_list = [
+"\{"path": "~/.vim/plugged/briefcase/raw/",
+"\ "path_html": "~/.vim/plugged/briefcase/html/",
+"\ "auto_export": 0}
+"\]
+
+" set a custom highlight color for vim-better-whitespace
+" highlight ExtraWhitespace ctermbg=red
+
+"
+"let g:vimwiki_list = [
+"\{"path": "~/briefcase/notes/",
+"\ "path_html": "~/briefcase/notes_html/",
+"\ "syntax": "markdown",
+"\ "ext": ".md",
+"\ "css_file": "~/briefcase/notes_html/css/style.css",
+"\ "custom_wiki2html": "~/.vim/plugged/vimwiki/autoload/vimwiki/customwiki2html.sh",
+"\ "auto_export": 0}
+"\]
+" If html run in emacs: rm /usr/share/applications/emacs*
+" let g:vimwiki_browsers=['/usr/bin/firefox']
+
+endif
+" }}}
+
+" ==============================================================================
+
+" set my colorscheme:
+try
+     colorscheme gruvbox
+"    colorscheme jellybeans
+     set background=dark    " Setting dark mode
+catch /^Vim\%((\a\+)\)\=:E185/
+     colorscheme default
+endtry
+
+" Disable annoying beeping
+set noerrorbells
+set vb t_vb=
+
+":he encoding-values
+"e! ++enc=cp1251
+"
+" Russian
+set keymap=russian-jcukenwin
+set iminsert=0
+set imsearch=0
+"highlight lCursor guifg=NONE guibg=Cyan
+set langmap=ФИСВУАПРШОЛДЬТЩЗЙКЫЕГМЦЧНЯ;ABCDEFGHIJKLMNOPQRSTUVWXYZ,фисвуапршолдьтщзйкыегмцчня;abcdefghijklmnopqrstuvwxyz
+
+if has("spell")
+  " http://ftp.vim.org/vim/runtime/spell/
+  " setlocal spell spelllang=ru_yo,en_us " For check use: ]s, [s, z=
+  " turn spelling off by default
+  " toggle spelling with F7 key
+  map <silent><F7> :setlocal spell! spelllang=ru_yo,en_us<CR><Bar>:echo "Spell Check: " . strpart("OffOn", 3 * &spell, 3)<CR>
+
+  " they were using white on white
+  " highlight PmenuSel ctermfg=black ctermbg=lightgray
+
+  " limit it to just the top 10 items
+  " set sps=best,10
+endif
+
+" The <Leader> key is mapped to \ by default
+:verbose let mapleader = ","
+" The <LocalLeader> key is mapped to \\ by default
+let maplocalleader = ",,"
+
+set nohlsearch
+
+nnoremap <F4> :se hlsearch!<CR>
+" Press ,c to removes the highlighting for the current search.
+nnoremap <leader>/ :nohl<CR>
+
+" How to toggle Vim's search highlight visibility without disabling it: http://stackoverflow.com/q/9054780
+" let hlstate=0
+" nnoremap <F4> :if (hlstate == 0) \| nohlsearch \| else \| set hlsearch \| endif \| let hlstate=1-hlstate<cr>
+
+" Will highlight all occurrences of the current word
+" nnoremap <F8> :let @/='\<<C-R>=expand("<cword>")<CR>\>'<CR>:set hls<CR>
+
+set ignorecase
+set smartcase
+set incsearch
+"set infercase
+
+set history=1000
+set undolevels=1000
+set tabpagemax=50
+set wildmenu
+set wildmode=list:longest
+
+set showcmd "Show (partial) command in the last line of the screen
+
+set showmatch " briefly jump to matching parenthesis when writing one
+set matchtime=3 " speed up showmatch
+set matchpairs=(:),{:},[:],<:> " match these with each other (with %)
+set ruler
+" set mouse to command-line mode for disable
+set mouse=c
+"set mouse=a
+set showbreak=\
+set shortmess+=I " disable VIM splash screen
+
+" For find in help position your cursor on the word keywordprg and just press K
+":set keywordprg=man\ -s
+let &keywordprg=':help'
+" For ruby code, I like to do the following:
+" set keywordprg=ri
+" For Perl:
+" set keywordprg=perldoc
+
+set showcmd
+
+se rnu
+se nu
+" Press ,n toggle number on/off.
+nmap <silent> <leader>n :exec &nu==&rnu? "se nu!" : "se rnu!"<CR>
+
+" Press <space> Insert a single character:
+" nnoremap <silent><space> i <Esc>r
+"
+" function! RepeatChar(char, count)
+" return repeat(a:char, a:count)
+" endfunction
+"" nnoremap s :<C-U>exec "normal i".RepeatChar(nr2char(getchar()), v:count1)<CR>
+" nnoremap <space> :<C-U>exec "normal i".RepeatChar(nr2char(getchar()), v:count1)<CR>
+"" nnoremap S :<C-U>exec "normal a".RepeatChar(nr2char(getchar()), v:count1)<CR>
+
+" Press <space> for fold/unfold
+" nnoremap <space> zx
+nnoremap <space> za
+
+" Press ,w toggle wrap on/off.
+nnoremap <leader>w :set wrap! wrap?<CR>
+
+"tabe file name, gt gT Ctrl+PageUp/PageDown, vim -p file1 file2
+
+" Press [<Space> and ]<Space> to add [count] blank lines above / below the current line.
+" nnoremap <silent> ]<Space> :<C-u>put =repeat(nr2char(10),v:count)<Bar>execute "'[-1"<CR>
+" nnoremap <silent> [<Space> :<C-u>put!=repeat(nr2char(10),v:count)<Bar>execute "']+1"<CR>
+
+" Toggle current line highlighting with c.
+" :se cul
+nnoremap <localleader>c :set cul! nocul?<CR>
+
+" http://vim.wikia.com/wiki/How_to_obscure_text_instantaneously
+noremap <Leader>r ggg?G``
+
+" Execute current file
+" noremap <F9> :!%:p
+" nnoremap <leader>r :!%:p
+" nnoremap <F9> :!%:p<Enter><Enter>
+
+" :! sh %
+" :'<,'>w !command
+
+" Run current line
+" :.w !bash # run current line
+" nmap <F9> :exec '!'.getline('.')<Enter>
+" nnoremap <buffer> <F9> :exec '!python' shellescape(@%, 1)<cr>
+
+" You can select the lines, yank the selection and execute it with
+" http://stackoverflow.com/questions/4268532/vim-how-to-execute-selected-text-as-vim-commands
+" vmap <space> "xy:@x<CR>
+" You can select the lines, yank the selection and execute it with
+" :@"
+" nnoremap <leader>2 :@"<CR>
+
+set statusline=%<%F\ %h%m%r%w\ (%Y)%=%-14.(%l,%c%V%)\ %P " see :help statusline
+" Show statusbar with l.
+" set laststatus=2
+nnoremap <leader>l :set laststatus=2<CR>
+
+" set pastetoggle=<F2>
+nnoremap <F10> :set paste! nopaste?<CR>
+
+" keymap in urxvt issue: http://vim.wikia.com/wiki/Mapping_fast_keycodes_in_terminal_Vim
+nmap <C-F2> :setlocal clipboard=^unnamed,unnamedplus<CR>
+"nnoremap <F2> :vnoremap y "+y<CR>
+
+" Give a shortcut key to NERD Tree
+" map <F2> :NERDTreeToggle<CR>
+
+" nmap <F8> :TagbarToggle<CR>
+
+" nnoremap <leader>. :CtrlPTag<cr>
+
+"autopen NERDTree and focus cursor in new document
+" autocmd VimEnter * NERDTree
+" autocmd VimEnter * wincmd p
+
+" The one oddity there is the use of ]p instead of p to paste in, see :h ]p
+" nnoremap <leader>p :set paste<CR>
+"map <Leader>p :set paste<CR>o<ESC>"*]p:set nopaste<CR>
+map <Leader>p :set paste<CR>"*]p :set nopaste<CR>
+
+" Plus (+) is mouse selection, asterix (*) is usual clipboard:
+" In terminal * clipboard, in web-browser + clipboard
+" map <Leader>y "*y - Not needed because you cat just use usual yank with y
+" Pasting to terminal just y:
+" Pasting to X-windows ,y:
+map <Leader>y "+y
+" Maybe need to change this to something for pasting to both clipboards
+
+" Get filepath
+"map <Leader>f :!ls %:p<CR>
+map <Leader>f :echo expand('%:p')<CR>
+
+" cmap w!! w !sudo tee % >/dev/null
+cmap w!! w !sudo tee % >/dev/null<CR>
+
+" Highlight unwanted spaces in Vim
+" http://stackoverflow.com/a/7684410
+" highlight ExtraWhitespace ctermbg=darkgreen guibg=darkcyan
+" highlight ExtraWhitespace ctermbg=darkgreen guibg=darkcyan
+" autocmd BufEnter * if &ft != 'help' | match ExtraWhitespace /\s\+$/ | endif
+" autocmd BufEnter * if &ft == 'help' | match none /\s\+$/ | endif
+" So just :%s/ubstitute the pattern to fit your needs.
+
+" Abbreviations:
+
+" By typing "#b" we type the top of a boxed comment. Typing "#e" types the bottom line.
+" (We put the ^V^H^V^H in the file to backup over the comment leader.)
+" :ab #b /****************************************
+" :ab #e ^V^H*****************************************/
+
+" Disable automatic comment insertion:
+autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
+
+" Marker fold method for some type of files: http://learnvimscriptthehardway.stevelosh.com/chapters/48.html
+autocmd FileType vim,c++,txt,org setlocal foldmethod=marker
+
+"autocmd BufReadPost *
+"   \ if line("'\"") > 0 && line("'\"") <= line("$") |
+"   \ exe "normal g`\"" |
+"   \ endif
+
+" To always change the working directory to the current file's directory path
+" if has("autocmd")
+"   autocmd BufEnter * :lcd %:p:h
+" endif " has("autocmd")
+" :E Explore directory of current file :help :E
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Get Alt key to work:
+" http://stackoverflow.com/a/27206531
+" tmux: http://stackoverflow.com/a/16600458
+" https://github.com/drmikehenry/vim-fixkey
+" http://vim.wikia.com/wiki/Get_Alt_key_to_work_in_terminal
+"
+" $ cat
+" ^[d
+" $
+
+" in your .vimrc
+" # ^[ is the escape character
+" execute "set <M-d>=\ed"
+" noremap <M-d> :echo "m-d works!"<cr>
+"
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" execute "set <M-d>=\ed"
+" noremap <M-d> :echo "m-d works!"<cr>
+" execute "set <M-w>=\ew"
+" noremap <M-w> :echo "m-d works..!"<cr>
+
+" hjkl movements in Insert mode with <Alt>
+" execute "set <M-h>=\eh"
+" inoremap <M-h> <C-o>h
+" execute "set <M-j>=\ej"
+" inoremap <M-j> <C-o>j
+" execute "set <M-k>=\ek"
+" inoremap <M-k> <C-o>k
+" execute "set <M-l>=\el"
+" inoremap <M-l> <C-o>l
+
+" bw movements in Insert mode with <Alt>
+" execute "set <M-b>=\eb"
+" inoremap <M-b> <C-o>b
+" execute "set <M-w>=\ew"
+" inoremap <M-w> <C-o>w
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+" :helpgrep :vimgrep
+nmap <silent> <RIGHT> :cnext<CR>
+nmap <silent> <RIGHT><RIGHT> :cnfile<CR><C-G>
+nmap <silent> <LEFT> :cprev<CR>
+nmap <silent> <LEFT><LEFT> :cpfile<CR><C-G>
+
+set helplang=ru
+
+" Open new split panes to right and bottom
+set splitbelow
+set splitright
+
+" For test
+" Vim response times when working with multiple splits is 5-10 times faster.
+" When enabled, any action that is not typed will not cause the screen to
+" redraw.
+set lazyredraw
+set ttyfast
+
+" Map ,e and ,v to open files in the same directory as the current file
+cnoremap %% <C-R>=expand('%:h').'/'<cr>
+map <leader>e :edit %%
+map <leader>v :view %%
+
+" Tab mappings
+"map <leader>tt :tabnew<cr>
+"map <leader>te :tabedit
+"map <leader>tc :tabclose<cr>
+"map <leader>to :tabonly<cr>
+"map <leader>tn :tabnext<cr>
+"map <leader>tp :tabprevious<cr>
+"map <leader>tf :tabfirst<cr>
+"map <leader>tl :tablast<cr>
+"map <leader>tm :tabmove
+
+" For Emacs-style editing on the command-line: >
+" start of line
+:cnoremap <C-A>		<Home>
+" back one character
+:cnoremap <C-B>		<Left>
+" delete character under cursor
+:cnoremap <C-D>		<Del>
+" end of line
+:cnoremap <C-E>		<End>
+" forward one character
+:cnoremap <C-F>		<Right>
+" recall newer command-line
+:cnoremap <C-N>		<Down>
+" recall previous (older) command-line
+:cnoremap <C-P>		<Up>
+" back one word
+:cnoremap <Esc><C-B>	<S-Left>
+" forward one word
+:cnoremap <Esc><C-F>	<S-Right>
+" NOTE: This requires that the '<' flag is excluded from 'cpoptions'. |<>|
+
+autocmd BufNewFile,BufReadPost *.md set filetype=markdown " Toggle to markdown syntax for *.md files
+
+" Commenting blocks of code.
+autocmd FileType c,cpp,java,scala let b:comment_leader = '// '
+autocmd FileType sh,ruby,python,gentoo-package-use   let b:comment_leader = '# '
+autocmd FileType conf,fstab,tmux       let b:comment_leader = '# '
+autocmd FileType tex              let b:comment_leader = '% '
+autocmd FileType mail             let b:comment_leader = '> '
+autocmd FileType vim              let b:comment_leader = '" '
+noremap <silent> ,cc :<C-B>silent <C-E>s/^/<C-R>=escape(b:comment_leader,'\/')<CR>/<CR>:nohlsearch<CR>
+noremap <silent> ,cu :<C-B>silent <C-E>s/^\V<C-R>=escape(b:comment_leader,'\/')<CR>//e<CR>:nohlsearch<CR>
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" MULTIPURPOSE TAB KEY
+" Indent if we're at the beginning of a line. Else, do completion.
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" function! InsertTabWrapper()
+"   let col = col('.') - 1
+"   if !col || getline('.')[col - 1] !~ '\k'
+"       return "\<tab>"
+"   else
+"       return "\<c-p>"
+"   endif
+" endfunction
+" inoremap <expr> <tab> InsertTabWrapper()
+" inoremap <s-tab> <c-n>
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Diff current buffer and the original file with :DiffSaved
+" To get out of diff view you can use the :diffoff
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+function! s:DiffWithSaved()
+  let filetype=&ft
+  diffthis
+  vnew | r # | normal! 1Gdd
+  diffthis
+  exe "setlocal bt=nofile bh=wipe nobl noswf ro ft=" . filetype
+endfunction
+com! DiffSaved call s:DiffWithSaved()
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" How can I Rename the current file in vim:
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"
+"
+"
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" How can I delete the current file in vim:
+" http://stackoverflow.com/a/16679182/1242187
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" :command! Remove call delete(expand('%')) | bdelete!
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Md5 COMMAND
+" Show the MD5 of the current buffer
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+command! -range Md5 :echo system('echo '.shellescape(join(getline(<line1>, <line2>), '\n')) . '| md5sum')
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" InsertTime COMMAND
+" Insert the current time
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+command! InsertTime :normal a<c-r>=strftime('%F %H:%M:%S.0 %z')<cr>
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Simply opens the quickfix window
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+nnoremap <leader>q :call QuickfixToggle()<cr>
+let g:quickfix_is_open = 0
+function! QuickfixToggle()
+    if g:quickfix_is_open
+        cclose
+        let g:quickfix_is_open = 0
+        execute g:quickfix_return_to_window . "wincmd w"
+    else
+        let g:quickfix_return_to_window = winnr()
+        copen
+        let g:quickfix_is_open = 1
+    endif
+endfunction
+
+" :mksession filename - save session # how to autosave and auto reload vim sesstion
+" ctags index files for navigating in project https://en.wikipedia.org/wiki/Ctags
+" NERD_tree file navigation
+" Shift J and Shift K previous/next buffers
+" Ctrl J and Ctrl K previous/next tabs
+" ctags -R --exclude='.git' .
+
+" :help clear-undo (Vim 7.3+)
+function! ClearUndo()
+    let choice = confirm("Clear undo information?", "&Yes\n&No", 2)
+    if choice == 1
+        let old_undolevels = &undolevels
+        set undolevels=-1
+        exe "normal a \<Bs>\<Esc>"
+        let &undolevels = old_undolevels
+        "echo "done."
+    endif
+endfunction
+map <Leader>dU :call ClearUndo()<CR>
+map <Leader>u :call ClearUndo()<CR>
+
+" https://stackoverflow.com/questions/19594802/diffput-to-multiple-buffers
+function! GetDiffBuffers()
+	return map(filter(range(1, winnr('$')), 'getwinvar(v:val, "&diff")'), 'winbufnr(v:val)')
+	endfunction
+
+	function! DiffPutAll()
+for bufspec in GetDiffBuffers()
+	execute 'diffput' bufspec
+	endfor
+	endfunction
+
+command! -range=-1 -nargs=* DPA call DiffPutAll()
+
+" ==============================================================================
+
+" {{{ Vim Cheat Sheet:
+" http://www.oualline.com/vim-cook.html
+
+" date | /usr/bin/vim -u ~/.vimrc -
+
+" Theme generator:
+" http://bytefluent.com/vivify/
+
+" :set undoreload=0 | edit
+" :se ur=0 | e
+" :set undolevels=-1
+
+" https://www.linux.com/learn/tutorials/442419-vim-tips-working-with-external-commands
+" :r ! ls -1 /home/user/directory
+" 20,25 ! rot13
+" :! wc %
+
+" yl/y<space>   copy character
+" 5y<space>     copy 5 characters
+" vy            copy character with visual yank
+" xu/Xu         copy character
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" CHEATSHEET
+" https://peteraba.com/blog/my-vanilla-vim-cheatsheet/
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"
+" Movements
+" Basic motions
+"
+"     Left: h
+"     Down: k
+"     Up: k
+"     Right: l
+"
+" Examples
+"
+"     Left 4 characters: 4h
+"     Down 2 rows: 2k
+"     Up 3 rows: 3k
+"     Right 6 characters: 6l
+"
+" Word movements
+"
+"     Next normal-word: w
+"     Previous normal-word: b
+"     Next whole-word: W
+"     Previous whole-word: B
+"     End of the current word: e
+"
+" Examples
+"
+"     Next 2 normal-words: 2w
+"     Previous 2 normal-words: 4b
+"     Next 2 whole-words: 3W
+"     Previous 3 whole-words: 3B
+"
+" Fast movements
+"
+"     Beginning of the file: gg
+"     End of the file: G
+"     Jump to line number: {Line number}G; {Line number}gg
+"     Next paragraph: }
+"     Previous paragraph: {
+"
+" Examples
+"
+"     Jump to line number #123: 123G
+"     Jump to line number #123: 123gg
+"     Next 3rd paragraph: 3}
+"     Previous 3rd paragraph: 3{
+"
+" Inline Search
+"
+"     Jump to next character in line: f
+"     Jump to previous character in line: F
+"     Jump to next character in line, cursor 1 char before occurrence: t
+"     Jump to previous character in line, cursor 1 char after occurrence: T
+"     Repeat last jump to character (f): ;
+"     Repeat last jump to character (f) backward: ,
+"
+" Examples
+"
+"     Search the 2nd ‘p’ forward in line: f2p
+"     Search the 2nd ‘p’ backwards in line: F2p
+"
+" Visual mode
+"
+"     Toggle going between first and last characters of selection in visual mode: o
+"     Toggle going between first and last characters of selection on current line in visual mode: O
+"
+" Change list
+"
+"     Navigate to previous change: g;
+"     Navigate to next change: g,
+"     Listing previous changes: :changes
+"
+" Jumps
+"
+"     Navigate to previous jump: <c-O>
+"     Navigate to next jump: <c-I>
+"     Listing previous jumps: :jumps
+"
+" Editing
+" Basics
+"
+"     Insert: i
+"     Append: a
+"     Delete: x
+"     Delete: d{Motion}
+"     Undo changes: u
+"     Change: c{Motion}
+"     Paste after: p
+"     Paste before: P
+"     Yanking: y{Motion}
+"
+" Examples
+"
+"     Delete word: dw
+"     Delete word backwards: db
+"     Delete 2 lines: 2dd
+"     Delete closest tag: di<
+"     Change 3 lines: 3dd
+"     Change text within closest double quotes in line: ci”
+"     Yanking 1 char: yl
+"     Yanking 3 chars: 3yl
+"     Yanking 1 line: Y
+"     Yanking 2 lines: 2Y
+"
+" Advanced stuff
+"
+"     Insert something at the end of the current line: A
+"
+" Search and Replace
+" Search
+"
+"     Simple search: /
+"     Simple search backwards: ?
+"     Jump to next occurence of word under cursor: *
+"     Jump to previous occurence of word under cursor: #
+"     Jump to matching curly brace, parantheses or bracket under the cursor: %
+"
+" Examples
+"
+"     Regular expressions search for finding any character followed by a vowel: //.[aeiou]
+"     Delete everything up to a search ‘fire’ term: d/fire
+"
+" Replace
+"
+"     Replace first ‘Amber’ with ‘Ember’ in line: :s/Amber/Ember
+"     Replace all ‘Amber’ with ‘Ember’ in line: :s/Amber/Ember/g
+"     Replace all ‘Amber’ with ‘Ember’ in file: :%s/Amber/Ember/g
+"     Replace a character: r
+"     Enable replace mode: R
+"
+" Examples
+"
+"     Replace all ‘router’ with ‘dispatcher’ in method in visual mode with confirmation: v%:‘<, >’s/router/dispatcher/gc
+"     Replace using last search: :%s//replaceText/g
+"     Searching for text starting with a non-space, but the non-space excluded: /[^ ]\zs(
+"
+" Delete
+"
+"     Delete first line that matches expression: :s/expression/d
+"
+" Examples
+"
+"     Delete all lines except that matches expression: :g!/expression/d
+"     Delete all lines except that matches expression (with shortcut): :v/expression/d
+"
+" Advanced stuff
+"
+"     Very magic mode (Most usual expression engine): \v
+"
+" Macros
+"
+"     Record empty command list into macro into register A: qaq
+"     Replay macro from register A: @a
+"
+" Examples
+"
+"     Record macro into register a, delete tag around text in line and go to next line: qadf>f<d$jq
+"     Replaying last macro 240 times: 240@a
+"
+" Advanced movements
+" Jumping to positions
+"
+"     Jump half a screen down: <c-d>
+"     Jump half a screen up: <c-u>
+"     Jump full screen forward: <c-f>
+"     Jump full screen backwards: <c-b>
+"     Jump top of the current screen: H
+"     Jump middle of the current screen: M
+"     Jump last line of the current screen: L
+"
+" Moving the screen
+"
+"     Move current line to top of the screen: zt
+"     Move current line to bottom of the screen: zb
+"     Move current line to middle of the screen: zz
+"
+" Navigating wrapped lines
+"
+"     Go down a visual line (in wrapped lines): gj
+"     Go to the beginning of the current visual line (in wrapped lines): g0
+"
+" Markers
+"
+"     Mark a line into register B: mb
+"     Go to registered marker B: ‘b
+"     Go back to point where you jumped to marker from: “
+"
+" Command line
+"
+"     List files from current directory :!ls
+"     Write date into current file: :read !date
+"     Using selection of Visual mode as input for script: (-c: compile, -s: standard input, -p: in place) :‘<,‘>!coffee -c -s -p
+"
+" Buffers
+" Pure buffer commands
+"
+"     List buffers: :ls
+"     Next buffer: :bn
+"     Previous buffer: :bp
+"     Go to buffer #12: :b12
+"     Delete current buffer: :bd
+"     Delete buffer #12: :bd12
+"     New buffer: :enew
+"     Switch between current and last buffer: <c-^>
+"
+" Handling files
+"
+"     Writing buffer to disk: :w
+"     Force writing buffer to disk: :w!
+"     Writing all buffers to disk: :wa
+"     Writing buffer to disk as filename: :w filename
+"     Save file as filename: :saveas filename
+"     Set file type: :set ft=filetype
+"
+" New comment on the top of our 4 buffers
+"
+"     Create macro in register A: qa
+"     Jump to top of the file: G
+"     Add new line at top: O
+"     Add comment: # My first comment
+"     Save file: :w
+"     Next buffer: :bn
+"     Run macro: @a
+"     Run macro 2 more times: 2@
+"
+" Windows and Tabs
+" Windows
+" Split Windows
+"
+"     Open (file in) horizontal split :split [filename]; :sp [filename]
+"     Open (file in) vertical split: :vpspit [filename]; :vsp [filename]
+"     Open buffer in horizontal split window: :sb3
+"     Open buffer in vertical split window: :vert sb3
+"
+" Moving around
+"
+"     Navigate to window to the left: <c-w>h
+"     Navigate to window to the bottom: <c-w>j
+"     Navigate to window to the top: <c-w>k
+"     Navigate to window to the right: <c-w>l
+"     Move to window to the left: <c-w>H
+"     Move to window to the bottom: <c-w>J
+"     Move to window to the top: <c-w>K
+"     Move to window to the right: <c-w>L
+"
+" Resizing
+"
+"     1 rows higher: <c-w>+
+"     1 rows shorter: <c-w>-
+"     1 columns wider: <c-w>>
+"     1 columns narrower: <c-w><
+"
+" Examples
+"
+"     5 rows higher: <c-w>5+
+"     5 rows shorter: <c-w>5-
+"     5 columns wider: <c-w>5>
+"     5 columns narrower: <c-w>5<
+"     Make windows as equal as possible: <c-w>=
+"
+" Miscellaneous
+"
+"     Close all windows except the currently active one: :on
+"
+" Tabs
+"
+"     Open file on new tab: tabedit filename; :tabe filename
+"     Next tab: gt
+"     Previous tab: gT
+"     Move to tab #13: 13gt
+"     Close the current tab page and all its windows: :tabc
+"     Cloas all tabs except the currently active one: :tabo
+"     Move current tab to the end: :tabmove
+"     Move current tab to the beginning: :tabmove 0
+"     Move current tab to be the second tab: :tabmove 1
+"
+" Indents and Folds
+" Indents
+"
+"     Indent current line: >>
+"     Unindent current line: <<
+"     Indent current lines: 3>>
+"     Unndent current lines: 3<<
+"     Indent in insert mode: <c-T>
+"     Unindent in insert mode: <c-D>
+"     Indent selected lines in visual mode 6 times: 6>
+"     Unindent selected lines in visual mode 6 times: 6<
+"
+" Mappings
+" Basics
+"
+" Creating a new mapping:
+"
+" :map ,rs :!bundle exec rspec<cr>
+"
+" ,rs will execute !bundle exec rspec now.
+" Text Objects
+" Object types
+"
+"     Words: w
+"     Paragraph: p
+"     Sentence: s
+"     Tag: t
+"     Curly braces: {
+"     Brackets: [
+"     Parantheses: (
+"     Double quotes: “
+"     Quotes: ‘
+"     Backticks: `
+"
+" Selecting types
+"
+"     Inside: i
+"     Around: a
+"
+" Examples
+"
+"     Change content of first Double quotes on line: ci”
+"     Delete current paragraph plus the following empyt lines: dap
+"
+" Registers
+"
+"     List registers: :registers; :reg
+"     Delete text, but save it to register A: “add
+"     Paste the contents of register A: “ap
+"     Paste last yanked text: “0p
+"
+" Actions in Insert Mode
+"
+"     Vim-style backspace: <c-h>
+"     Deleting word backwards: <c-w>
+"     Delete line backwards from current position: <c-u>
+"     Insert literal character: <c-u>
+"     Insert unicode character: <c-u><Unicode Character Id>
+"     Leaving insert mode for one command: <c-o>
+"     Insert stuff from register A: <c-r>A
+"     Using the expression register: <c-r>=r{Expression}
+"     Insert something at the beginning of the current line: I
+"     Autoindent: =
+"
+" Random actions and motions
+"
+"     Perform the last action again: .
+"     Undo: u
+"     Redo: <c-r>
+"     Open a file under the cursor: gf
+"     Join current line with the following one by a space: J
+"     Look up manual for command/program under the cursor: K
+"     Increment number under cursor: <c-a>
+"     Decrement number under cursor: <c-x>
+"     Enforces spaces or tabs (depending on expandtab setting): :retab!
+"     Reveal current directory: :pwd
+"     Change current directory: :cd
+"     Insert newText in 3 consequtive rows at once: <c-V>2jInewText<Esc>
+"     Shortcut for copy: :t
+"
+" Examples
+"
+"     Increment all the itemnum attributes in an XML file: :g/itemnum/normal 20^A
+"     Copy line #9 to next line standing on line #16: :9Gyy:16Gp, :9Gyy<c-o>p, :9yankp, :9yp, :9copy16, :9t16, :9t., -7t.
+"     Copy 3 lines from #9 to next line standing on line #16: :9,11t.
+"
+" Explorer (netrw)
+"
+" netrw module usually comes with vim.
+" Window
+"
+"     Open Explorer in current window at current working directory: :e.
+"     Open Explorer in split window at current working directory: :sp.
+"     Open Explorer in vertical split window at current working directory: :vs.
+"     Open Explorer at directory of current file: :Explorer
+"     Open Explorer in vertical split window at directory of current file: :Vex
+"
+" Manipulating file system
+"
+"     Create a new file: %
+"     Create a new directory: d
+"     Rename a file/directory under the cursor: R
+"     Delete the file/directory under the cursor: D
+"
+" Spell checking
+"
+" Spell checking is built in into vim.
+" Enabling
+"
+"     Enabling spellcheking: :set spell
+"     Setting British English spelling: :spellang=en_gb
+"     Accepting all English spellings (default): :spellang=en
+"     Setting language for window: :windo set spellang=en
+"     Setting language for buffer: :bufdo set spellang=en
+"
+" Navigation
+"
+"     Next misspelling: ]s
+"     Previous misspelling: [s
+"     Spelling suggestions: z=
+"     Adding word to known words: zg
+"     Removing word from known words: zw
+"     Unding adding word to known words: zug
+"     Unding removing word to known words: zuw
+" Ctr-S stop Ctrl-q resume
+" }}}

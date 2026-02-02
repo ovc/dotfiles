@@ -1,0 +1,33 @@
+{{ if ne .chezmoi.os "windows" -}}
+#!/usr/bin/env bash
+# Хэш архива: {{ include "dot_vim.tar.gz" | sha256sum }}
+#
+# 1. Создайте архив (на машине с интернетом):
+# tar -czf $(chezmoi source-path)/dot_vim.tar.gz -C ~ .vim
+#
+# 2. Зафиксируйте изменения:
+# cd $(chezmoi source-path)
+# git add .
+# git commit -m "Integrated cross-platform vim setup with air-gap support"
+#
+# 3. Примените в Air-Gap среде: Перенесите репозиторий и запустите:
+# chezmoi apply -v
+# chezmoi apply ~/.vimrc
+# chezmoi apply ~/.vimrc ~/.vim
+# -n или --dry-run: Показывает, что будет сделано, но не меняет файлы. chezmoi apply -n ~/.vimrc
+# -i или --interactive: Спрашивает подтверждение для каждого изменения. chezmoi apply -i
+
+ARCHIVE="{{ .chezmoi.sourceDir }}/dot_vim.tar.gz"
+VIM_DIR="$HOME/.vim"
+
+if [ -f "$ARCHIVE" ]; then
+    # Распаковываем, только если папка пуста или отсутствует
+    if [ ! -d "$VIM_DIR" ] || [ -z "$(ls -A "$VIM_DIR" 2>/dev/null)" ]; then
+        echo ">>> [Unix] .vim is empty or missing. Extracting archive..."
+        mkdir -p "$VIM_DIR"
+        tar -xzf "$ARCHIVE" -C "$HOME"
+    else
+        echo ">>> [Unix] .vim already has files. Skipping extraction."
+    fi
+fi
+{{ end -}}
