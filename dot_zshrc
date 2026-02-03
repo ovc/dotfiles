@@ -84,6 +84,7 @@ plugins=(
   fzf
   kubectl
   tmux
+  vi-mode
 )
 
 ZSH_TMUX_AUTOSTART=true
@@ -136,7 +137,7 @@ export PATH=$PATH:$HOME/.arkade/bin/
 # for i in $(ls -1 .arkade/bin); do arkade get $i; done
 export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
 export PATH="/home/ovc/.local/bin:$PATH"
-set -o vi
+# set -o vi
 
 HISTFILE="$HOME/.zsh_history"
 HISTSIZE=10000000
