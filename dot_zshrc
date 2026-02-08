@@ -249,12 +249,13 @@ alias nx='NP_RUNTIME=bwrap nix-portable'
 
 # alias nix-enter='NP_RUNTIME=bwrap nix-portable zsh'
 
-# alias nix-enter='NP_RUNTIME=bwrap nix-portable nix-shell -p bash --run "$HOME/.nix-profile/bin/zsh"'
-alias nix-enter='NP_RUNTIME=bwrap nix-portable nix-shell -p bash --run "$HOME/.nix-profile/bin/mksh"'
+# alias nix-enter='NP_RUNTIME=bwrap nix-portable nix-shell -p bash --run "$HOME/.nix-profile/bin/mksh"'
+alias nix-enter='NP_RUNTIME=bwrap nix-portable nix-shell -p bash --run "$HOME/.nix-profile/bin/zsh"'
 alias nix-run='nix-enter'
 
 # Обновляем все входы (nixpkgs и home-manager) до последних версий на GitHub
 # nix-portable nix flake update
+alias nix-flake-update='NP_RUNTIME=bwrap nix-portable nix flake update'
 
 # alias hms='NP_RUNTIME=bwrap nix-portable nix --extra-experimental-features "nix-command flakes" run github:nix-community/home-manager -- switch --flake .#ovc --impure -b backup-$(date +%Y%m%d-%H%M)'
 
@@ -262,6 +263,8 @@ alias nix-switch='cd ~/.config/home-manager && BACKUP_EXT=backup-$(date +%Y%m%d-
 
 alias nix-delete='NP_RUNTIME=bwrap nix-portable nix-collect-garbage -d'
 alias nix-delgen='NP_RUNTIME=bwrap nix-portable nix-env --delete-generations old'
+
+alias nix-cd='cd ~/.config/home-manager'
 ################################################################################
 
 
