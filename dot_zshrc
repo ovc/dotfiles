@@ -15,7 +15,7 @@ export ZSH="$HOME/.oh-my-zsh"
 # load a random theme each time Oh My Zsh is loaded, in which case,
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="robbyrussell"
+# ZSH_THEME="robbyrussell"
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
@@ -85,6 +85,7 @@ plugins=(
   kubectl
   tmux
   vi-mode
+  zsh-history-substring-search
 )
 
 ZSH_TMUX_AUTOSTART=true
@@ -130,32 +131,170 @@ export EDITOR='vim'
 # compinit
 # promptinit; prompt gentoo
 
+# autoload -Uz compinit promptinit
+# compinit
+# promptinit; prompt gentoo
+
+autoload -Uz compinit
+compinit
+
 # Enabling cache for the completions for zsh
 zstyle ':completion::complete:*' use-cache 1
 
-export PATH=$PATH:$HOME/.arkade/bin/
-# for i in $(ls -1 .arkade/bin); do arkade get $i; done
-export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
-export PATH="/home/ovc/.local/bin:$PATH"
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
+################################################################################
+
+
+################################################################################
+# bindkey -v
 # set -o vi
 
+# zsh: do you wish to see all 6506 possibilities (6507 lines)?
+# https://github.com/marlonrichert/zsh-autocomplete
+# zstyle ':autocomplete:*' delay 0.15
+
+# Конфликт с комбинацией Alt + / (в терминалах последовательность ^[ / эквивалентна Meta-клавише).
+# Когда вы вызываете autoload -Uz compinit; compinit, эта система автодополнения прописывает свои горячие клавиши. Одной из таких клавиш является Alt + / (или ^[/), на которую вешается функция _history-complete-older.
+#
+# Эта функция пытается найти в истории все строки, которые начинаются так же, как текущее слово на экране. Поскольку вы нажали это в пустой строке или очень быстро, она находит всю вашу историю (те самые 6506 строк) и вежливо спрашивает: «Вы действительно хотите вывести этот список из 6 тысяч строк на экран?».
+
+# Минимизируем задержку для Esc
+export KEYTIMEOUT=1
+
+# Убираем автодополнение истории с сочетания Alt+/ (Esc+/)
+# bindkey -r "^[/"
+#
+# # Гарантируем, что в VI-режиме поиск работает штатно
+bindkey -M vicmd "/" vi-history-search-backward
+
+#  Настройка стиля комплишена (если хотите оставить функцию)
+# Если вам все же нужно автодополнение по истории через Alt+/, но вы хотите убрать подтверждение при большом количестве строк, можно настроить лимит:
+# zstyle ':completion:*' list-prompt ''
+# zstyle ':completion:*' menu select=long
+# # Не спрашивать подтверждение, если вариантов больше заданного числа
+# zstyle ':completion:*:default' list-suffixes true
+# zstyle ':completion:*:default' list-grouped true
+
+################################################################################
+
+
+################################################################################
+# https://github.com/zsh-users/zsh-history-substring-search
+#  git clone https://github.com/zsh-users/zsh-history-substring-search ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-history-substring-search
+
+# bindkey -M emacs '^P' history-substring-search-up
+# bindkey -M emacs '^N' history-substring-search-down
+
+bindkey -M vicmd 'k' history-substring-search-up
+bindkey -M vicmd 'j' history-substring-search-down
+
+# Привязка Ctrl+P (вверх) и Ctrl+N (вниз) для поиска по подстроке
+bindkey '^P' history-substring-search-up
+bindkey '^N' history-substring-search-down
+
+################################################################################
+
+
+################################################################################
+# nix-portable
+# Указываем, где будет лежать вся база пакетов Nix (Store)
+export NP_LOCATION=$HOME/.local/share/nix-portable
+# Синтаксис: ./nix-portable nix-shell -p <имя_пакета> --run <команда>
+# ./nix-portable nix-shell -p bat --run "bat /etc/fstab"
+# Заходим в shell, где доступны python3 и midnight commander
+# ./nix-portable nix-shell -p python3 mc
+
+# Удалить старые неиспользуемые пакеты
+# ./nix-portable nix-collect-garbage
+
+# Удалить вообще всё, что не закреплено жестко (очистка "под ноль" неиспользуемого)
+# ./nix-portable nix-collect-garbage -d
+# nix-portable работает как контейнер. Внутри него лежат стандартные инструменты Nix:
+#
+#     nix (новый интерфейс с командами run, shell, develop)
+#
+#     nix-shell (старый интерфейс)
+#
+#     nix-collect-garbage (очистка)
+#
+# Если вы не пишете nix после nix-portable, он думает, что run — это название программы (как ls или cd), не находит её в своем «виртуальном» /bin/ и выдает ошибку: No such file or directory.
+# ./nix-portable nix run github:nix-community/home-manager -- switch --flake .#ovc
+
+# NP_RUNTIME=bwrap nix-portable nix run github:nix-community/home-manager -- news --flake .#ovc
+
+# Чтобы программы Nix понимали, где искать свои данные
+export NIX_PATH=nixpkgs=$HOME/.nix-defexpr/channels${NIX_PATH:+:}$NIX_PATH
+
+# nix-portable nix-shell -p имя_пакета --run имя_команды
+# ~/.config/home-manager/home.nix
+# NP_RUNTIME=bwrap nix-portable nix --extra-experimental-features 'nix-command flakes' run github:nix-community/home-manager -- switch --flake .#ovc
+
+# Заходим в изолированный Bash, где все программы из Home Manager работают
+# NP_RUNTIME=bwrap nix-portable bash
+
+# Алиас для входа в окружение Nix
+alias nix-env-enter='NP_RUNTIME=bwrap nix-portable zsh'
+
+# Алиас для быстрого запуска любых программ из Nix
+alias nx='NP_RUNTIME=bwrap nix-portable'
+
+# NP_RUNTIME=bwrap nix-portable nix run github:nix-community/home-manager -- news --flake .#ovc
+# NP_RUNTIME=bwrap nix-portable nix --extra-experimental-features 'nix-command flakes' run github:nix-community/home-manager -- switch --flake .#ovc --impure
+
+# NP_RUNTIME=bwrap nix-portable nix --extra-experimental-features 'nix-command flakes' run github:nix-community/home-manager -- switch --flake .#ovc --impure
+
+# NP_RUNTIME=bwrap nix-portable zsh
+
+# alias nix-enter='NP_RUNTIME=bwrap nix-portable zsh'
+
+# alias nix-enter='NP_RUNTIME=bwrap nix-portable nix-shell -p bash --run "$HOME/.nix-profile/bin/zsh"'
+alias nix-enter='NP_RUNTIME=bwrap nix-portable nix-shell -p bash --run "$HOME/.nix-profile/bin/mksh"'
+alias nix-run='nix-enter'
+
+# Обновляем все входы (nixpkgs и home-manager) до последних версий на GitHub
+# nix-portable nix flake update
+
+# alias hms='NP_RUNTIME=bwrap nix-portable nix --extra-experimental-features "nix-command flakes" run github:nix-community/home-manager -- switch --flake .#ovc --impure -b backup-$(date +%Y%m%d-%H%M)'
+
+alias nix-switch='cd ~/.config/home-manager && BACKUP_EXT=backup-$(date +%Y%m%d-%H%M) && NP_RUNTIME=bwrap nix-portable nix --extra-experimental-features "nix-command flakes" run github:nix-community/home-manager -- switch --flake .#ovc --impure -b $BACKUP_EXT'
+
+alias nix-delete='NP_RUNTIME=bwrap nix-portable nix-collect-garbage -d'
+alias nix-delgen='NP_RUNTIME=bwrap nix-portable nix-env --delete-generations old'
+################################################################################
+
+
+################################################################################
+# Путь и размеры
 HISTFILE="$HOME/.zsh_history"
-HISTSIZE=10000000
-SAVEHIST=10000000
-setopt BANG_HIST                 # Treat the '!' character specially during expansion.
-setopt EXTENDED_HISTORY          # Write the history file in the ":start:elapsed;command" format.
-setopt INC_APPEND_HISTORY        # Write to the history file immediately, not when the shell exits.
-setopt SHARE_HISTORY             # Share history between all sessions.
-setopt HIST_EXPIRE_DUPS_FIRST    # Expire duplicate entries first when trimming history.
-setopt HIST_IGNORE_DUPS          # Don't record an entry that was just recorded again.
-setopt HIST_IGNORE_ALL_DUPS      # Delete old recorded entry if new entry is a duplicate.
-setopt HIST_FIND_NO_DUPS         # Do not display a line previously found.
-setopt HIST_IGNORE_SPACE         # Don't record an entry starting with a space.
-setopt HIST_SAVE_NO_DUPS         # Don't write duplicate entries in the history file.
-setopt HIST_REDUCE_BLANKS        # Remove superfluous blanks before recording entry.
-setopt HIST_VERIFY               # Don't execute immediately upon history expansion.
-setopt HIST_BEEP                 # Beep when accessing nonexistent history.
-xset r rate 200 100
+HISTSIZE=1000000
+SAVEHIST=1000000
+
+# Запись и синхронизация
+setopt SHARE_HISTORY          # Импорт/экспорт истории в реальном времени
+setopt HIST_IGNORE_SPACE      # Игнорировать команды с пробелом в начале (для паролей)
+setopt HIST_REDUCE_BLANKS     # Убирать лишние пробелы в командах
+
+# Умная работа с дубликатами
+setopt HIST_IGNORE_ALL_DUPS   # Удалять старые дубли при записи новых
+setopt HIST_SAVE_NO_DUPS      # Не писать дубликаты в файл
+setopt HIST_FIND_NO_DUPS      # Не показывать дубли при поиске
+setopt HIST_EXPIRE_DUPS_FIRST # Если место кончится, сначала удалять дубли
+
+# Безопасность и удобство
+setopt EXTENDED_HISTORY       # Хранить время выполнения и длительность
+setopt HIST_VERIFY            # Дать шанс проверить команду после расширения (напр. !!)
+setopt NO_HIST_BEEP           # Отключить бесячий писк при ошибках в истории
+
+# Дополнительно (опционально)
+unsetopt BANG_HIST            # Если вы НЕ используете '!' для вызова команд,
+                              # лучше выключить, чтобы не экранировать каждый раз 'sudo apt install !!'
+################################################################################
+
+
+[[ -n "$DISPLAY" ]] && xset r rate 200 100 2>/dev/null
+# echo $XDG_SESSION_TYPE
 
 # eval `keychain --eval --agents ssh id_ed25519`
 # eval `keychain --eval --agents ssh id_ed25519_jusan`
@@ -165,13 +304,19 @@ xset r rate 200 100
 
 # eval "$(starship init zsh)"
 
-
 # source /usr/share/atuin/shell-init/zsh
 
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
-[[ "$PATH" == *"$HOME/bin:"* ]] || export PATH="$HOME/bin:$PATH"
+# Соберите все экспорты в одном блоке
+path_append() {
+  [[ -d "$1" ]] && export PATH="$1:$PATH"
+}
+
+path_append "$HOME/.nix-profile/bin"
+path_append "$HOME/.arkade/bin"
+path_append "${KREW_ROOT:-$HOME/.krew}/bin"
+path_append "$HOME/.local/bin"
+path_append "$HOME/bin"
+
 #! { which werf | grep -qsE "^/home/ovc/.trdl/"; } && [[ -x "$HOME/bin/trdl" ]] && source $("$HOME/bin/trdl" use werf "2" "stable")
 
 # eval "$(zellij setup --generate-auto-start zsh)"
