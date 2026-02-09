@@ -1,0 +1,18 @@
+# Настройка путей (PATH) — выполняется один раз при логине
+path_append() {
+  [[ -d "$1" ]] && export PATH="$1:$PATH"
+}
+
+path_append "${KREW_ROOT:-$HOME/.krew}/bin"
+path_append "$HOME/.nix-profile/bin"
+path_append "$HOME/.arkade/bin"
+path_append "$HOME/.local/bin"
+
+# Окружение Nix (выполняется один раз)
+if [[ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]]; then
+  . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+  . /nix/var/nix/profiles/default/etc/profile.d/nix.sh
+fi
+
+
+
