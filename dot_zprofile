@@ -7,12 +7,13 @@ path_append "${KREW_ROOT:-$HOME/.krew}/bin"
 path_append "$HOME/.nix-profile/bin"
 path_append "$HOME/.arkade/bin"
 path_append "$HOME/.local/bin"
+path_append "$HOME/bin"
 
-# Окружение Nix (выполняется один раз)
-if [[ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]]; then
+# Окружение Nix (Загружаем только если еще не загружено)
+if [[ -z "$NIX_PROFILES" && -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]]; then
   . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
   . /nix/var/nix/profiles/default/etc/profile.d/nix.sh
 fi
 
-
+command -v xset >/dev/null && xset r rate 200 100
 
