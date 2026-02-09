@@ -4,6 +4,7 @@
 #
 # 1. Создайте архив (на машине с интернетом):
 # tar -czf $(chezmoi source-path)/dot_vim.tar.gz -C ~ .vim
+# tar -czf $(chezmoi source-path)/dot_nvim.tar.gz -C ~ .config/nvim
 #
 # 2. Зафиксируйте изменения:
 # cd $(chezmoi source-path)
@@ -23,6 +24,7 @@
 # chezmoi apply ~/.vimrc ~/.vim
 # Применить только обычные файлы и шаблоны (пропустить скрипты)
 # chezmoi apply --include=files
+# chezmoi execute-template < $(chezmoi source-path)/run_once_before_install-vim-unix.sh.tmpl | sh
 
 ARCHIVE="{{ .chezmoi.sourceDir }}/dot_vim.tar.gz"
 VIM_DIR="$HOME/.vim"
