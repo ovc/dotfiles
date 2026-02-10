@@ -1,5 +1,6 @@
 # zmodload zsh/zprof # zsh profiler
 
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 #  Мгновенная отрисовка интерфейса (должна быть первой!)
 # if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
 #   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
@@ -15,8 +16,8 @@ zinit light romkatv/powerlevel10k
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 # Фоновая загрузка тяжелых плагинов (lucid wait'0')
-zinit ice lucid wait'0'
-zinit snippet OMZ::plugins/sudo
+# zinit ice lucid wait'0'
+# zinit snippet OMZ::plugins/sudo
 
 # Use aliases instead of this plugin
 # zinit ice lucid wait'0' compile
@@ -32,7 +33,7 @@ function zvm_config() {
 zinit ice lucid depth=1 compile
 zinit light jeffreytse/zsh-vi-mode
 
-# Загрузка плагина zsh-history-substring-search
+## Загрузка плагина zsh-history-substring-search
 zinit ice lucid wait'0' atload="_history_substring_search_config" compile
 zinit light zsh-users/zsh-history-substring-search
 
@@ -54,13 +55,13 @@ function _history_substring_search_config() {
   HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_NOT_FOUND='fg=red,bold'
 }
 
-# Загрузка плагина zsh-autosuggestions
-zinit ice lucid wait'0' compile blockf
-zinit light zsh-users/zsh-autosuggestions
+## Загрузка плагина zsh-autosuggestions
+# zinit ice lucid wait'0' compile blockf
+# zinit light zsh-users/zsh-autosuggestions
 
 # Syntax Highlighting — ВСЕГДА ПОСЛЕДНИЙ
-zinit ice lucid wait"0" atinit"zpcompinit; zpcdreplay" blockf
-zinit light zsh-users/zsh-syntax-highlighting
+# zinit ice lucid wait"0" atinit"zpcompinit; zpcdreplay" blockf
+# zinit light zsh-users/zsh-syntax-highlighting
 
 # PATH и NIX Перенесено в .zprofile
 
