@@ -25,16 +25,25 @@ zinit light romkatv/powerlevel10k
 
 # Vi-mode конфигурация
 function zvm_config() {
+  ZSH_VI_MODE_CURSOR_STYLE_ENABLED=false
   ZVM_LINE_INIT_MODE=$ZVM_MODE_INSERT
   ZVM_VI_INSERT_ESCAPE_BINDKEY=jk
   ZVM_KEYTIMEOUT=0.05
+}
+
+function zvm_after_init() {
+  zvm_bindkey vicmd 'H' vi-beginning-of-line
+  zvm_bindkey vicmd 'L' vi-end-of-line
+
+  zvm_bindkey viins '^P' history-substring-search-up
+  zvm_bindkey viins '^N' history-substring-search-down
 }
 
 zinit ice lucid depth=1 compile
 zinit light jeffreytse/zsh-vi-mode
 
 ## Загрузка плагина zsh-history-substring-search
-zinit ice lucid wait'0' atload="_history_substring_search_config" compile
+zinit ice lucid wait'0a' atload="_history_substring_search_config" compile
 zinit light zsh-users/zsh-history-substring-search
 
 # Функция настройки (выполнится автоматически после загрузки)
@@ -55,13 +64,57 @@ function _history_substring_search_config() {
   HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_NOT_FOUND='fg=red,bold'
 }
 
-## Загрузка плагина zsh-autosuggestions
-# zinit ice lucid wait'0' compile blockf
-# zinit light zsh-users/zsh-autosuggestions
+zinit ice lucid wait'0b' compile
+zinit snippet OMZ::plugins/fzf
 
-# Syntax Highlighting — ВСЕГДА ПОСЛЕДНИЙ
-# zinit ice lucid wait"0" atinit"zpcompinit; zpcdreplay" blockf
-# zinit light zsh-users/zsh-syntax-highlighting
+zinit ice lucid wait'0c' compile
+zinit light Aloxaf/fzf-tab
+
+# Отключаем стандартную сортировку (fzf сам справится)
+zstyle ':completion:*:git-checkout:*' sort false
+# Настройка цветов и групп
+zstyle ':completion:*:descriptions' format '[%d]'
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
+
+zstyle ':fzf-tab:complete:(-command-|-parameter-|-brace-parameter-|export|unset|expand):*' \
+    fzf-preview 'echo ${(P)word}'
+zstyle ':fzf-tab:complete:git-(checkout|switch|branch):*' fzf-preview \
+    'git log --color=always --oneline --graph --date=short --pretty="format:%C(auto)%cd %h%d %s" $word'
+zstyle ':fzf-tab:complete:*:*' fzf-preview \
+  'if [ -d $realpath ]; then eza -1 --icons --color=always $realpath; \
+   elif [ -f $realpath ]; then bat --style=numbers --color=always --line-range :500 $realpath; \
+   fi'
+
+# Предпросмотр переменных окружения
+zstyle ':completion:*:parameters' fzf-preview 'echo ${(P)word}'
+# Предпросмотр команд (man)
+zstyle ':completion:*:commands' fzf-preview 'man $word'
+# Цвета для fzf-tab (соответствие теме)
+zstyle ':fzf-tab:*' fzf-flags $(echo $FZF_DEFAULT_OPTS)
+
+
+zinit ice lucid wait'0d' compile
+zinit light ajeetdsouza/zoxide
+
+eval "$(zoxide init zsh)"
+alias cd="z" # Опционально: замена cd на z
+
+zinit ice lucid wait'0e' compile
+zinit light eza-community/eza
+
+# Алиасы для замены
+alias ls='eza --icons'
+alias ll='eza --icons -l --git'
+alias la='eza --icons -la --git'
+alias tree='eza --icons --tree'
+
+zinit wait'0f' lucid compile for \
+  atinit"ZINIT[COMPINIT_OPTS]=-C; zicompinit; zicdreplay" \
+    zdharma-continuum/fast-syntax-highlighting \
+  blockf \
+    zsh-users/zsh-completions \
+  atload"!_zsh_autosuggest_start" \
+    zsh-users/zsh-autosuggestions
 
 # PATH и NIX Перенесено в .zprofile
 
@@ -88,6 +141,9 @@ setopt HIST_EXPIRE_DUPS_FIRST # Если место кончится, снача
 setopt EXTENDED_HISTORY       # Хранить время выполнения и длительность
 setopt HIST_VERIFY            # Дать шанс проверить команду после расширения (напр. !!)
 setopt NO_HIST_BEEP           # Отключить бесячий писк при ошибках в истории
+
+setopt HIST_REDUCE_BLANKS
+setopt NO_CLOBBER
 
 # Дополнительно (опционально)
 unsetopt BANG_HIST            # Если вы НЕ используете '!' для вызова команд,
@@ -134,10 +190,24 @@ alias gstl='git stash list'
 alias grhh='git reset --hard'  # ОПАСНО: сбросить всё до последнего коммита
 alias gunwip='git log -n 1 | grep -q -c "wip" && git reset HEAD~1' # Отменить последний локальный коммит (если забыл что-то)
 
+alias -s {pdf,jpg,png}=open
+alias -s {py,js,ts,json}=vim
+
+# Быстрая навигация
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+
+# Инструменты
+alias ip='ip -color=auto'
+alias grep='grep --color=auto'
+alias df='duf' # Если установлен duf (современный аналог df)
+alias cat='bat' # Ты уже используешь bat в превью, можно сделать основным [cite: 7]
+
 # Автозапуск TMUX (Финальный блок)
 # Используем -A для мгновенного подключения к сессии 'main'
 if [[ -z "$TMUX" && -z "$VSCODE_PID" && -z "$SSH_TTY" && $- == *i* ]]; then
-    exec tmux new-session -A -s main
+    exec tmux -2 new-session -A -s main
 fi
 
 # zcompile ~/.p10k.zsh
