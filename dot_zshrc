@@ -1,0 +1,152 @@
+# zmodload zsh/zprof # zsh profiler
+
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+#  Мгновенная отрисовка интерфейса (должна быть первой!)
+# if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+#   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+# fi
+
+# Менеджер плагинов Zinit
+ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
+source "${ZINIT_HOME}/zinit.zsh"
+
+# Тема Powerlevel10k (мгновенная загрузка)
+zinit ice depth"1" compile
+zinit light romkatv/powerlevel10k
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+# Фоновая загрузка тяжелых плагинов (lucid wait'0')
+# zinit ice lucid wait'0'
+# zinit snippet OMZ::plugins/sudo
+
+# Use aliases instead of this plugin
+# zinit ice lucid wait'0' compile
+# zinit snippet OMZ::plugins/git
+
+# Vi-mode конфигурация
+function zvm_config() {
+  ZVM_LINE_INIT_MODE=$ZVM_MODE_INSERT
+  ZVM_VI_INSERT_ESCAPE_BINDKEY=jk
+  ZVM_KEYTIMEOUT=0.05
+}
+
+zinit ice lucid depth=1 compile
+zinit light jeffreytse/zsh-vi-mode
+
+## Загрузка плагина zsh-history-substring-search
+zinit ice lucid wait'0' atload="_history_substring_search_config" compile
+zinit light zsh-users/zsh-history-substring-search
+
+# Функция настройки (выполнится автоматически после загрузки)
+function _history_substring_search_config() {
+  # Привязка стрелок вверх/вниз
+  bindkey "$terminfo[kcuu1]" history-substring-search-up
+  bindkey "$terminfo[kcud1]" history-substring-search-down
+
+  # Привязка для режима Vi (если используете)
+  # bindkey -M vicmd 'k' history-substring-search-up
+  # bindkey -M vicmd 'j' history-substring-search-down
+
+  bindkey '^P' history-substring-search-up
+  bindkey '^N' history-substring-search-down
+
+  # Настройка цветов (необязательно)
+  HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_FOUND='fg=magenta,bold'
+  HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_NOT_FOUND='fg=red,bold'
+}
+
+## Загрузка плагина zsh-autosuggestions
+# zinit ice lucid wait'0' compile blockf
+# zinit light zsh-users/zsh-autosuggestions
+
+# Syntax Highlighting — ВСЕГДА ПОСЛЕДНИЙ
+# zinit ice lucid wait"0" atinit"zpcompinit; zpcdreplay" blockf
+# zinit light zsh-users/zsh-syntax-highlighting
+
+# PATH и NIX Перенесено в .zprofile
+
+# Настройки истории (Оптимизировано для скорости)
+HISTFILE="$HOME/.zsh_history"
+HISTSIZE=100000
+SAVEHIST=100000
+
+# Запись и синхронизация
+# setopt SHARE_HISTORY          # Импорт/экспорт истории в реальном времени
+setopt APPEND_HISTORY
+setopt INC_APPEND_HISTORY
+setopt HIST_IGNORE_SPACE      # Игнорировать команды с пробелом в начале (для паролей)
+setopt HIST_REDUCE_BLANKS     # Убирать лишние пробелы в командах
+export HISTIGNORE="pwd:ls:cd:exit" # Remove history data we don't want to see
+
+# Умная работа с дубликатами
+setopt HIST_IGNORE_ALL_DUPS   # Удалять старые дубли при записи новых
+setopt HIST_SAVE_NO_DUPS      # Не писать дубликаты в файл
+setopt HIST_FIND_NO_DUPS      # Не показывать дубли при поиске
+setopt HIST_EXPIRE_DUPS_FIRST # Если место кончится, сначала удалять дубли
+
+# Безопасность и удобство
+setopt EXTENDED_HISTORY       # Хранить время выполнения и длительность
+setopt HIST_VERIFY            # Дать шанс проверить команду после расширения (напр. !!)
+setopt NO_HIST_BEEP           # Отключить бесячий писк при ошибках в истории
+
+# Дополнительно (опционально)
+unsetopt BANG_HIST            # Если вы НЕ используете '!' для вызова команд,
+                              # лучше выключить, чтобы не экранировать каждый раз 'sudo apt install !!'
+
+export EDITOR="vim"
+
+# Alias
+alias update-tools='arkade get kubectl helm terraform jq k9s yq krew'
+
+# Основные команды
+alias g='git'
+alias gst='git status'
+alias gd='git diff'
+alias gds='git diff --staged'  # Посмотреть изменения, готовые к коммиту
+
+# Добавление и коммиты
+alias ga='git add'
+alias gaa='git add --all'      # Добавить вообще всё
+alias gcmsg='git commit -m'    # Быстрый коммит: gcmsg "текст"
+alias gcam='git commit -a -m'  # Добавить всё отслеживаемое и закоммитить
+
+# Синхронизация
+alias gp='git push'
+alias gl='git pull'
+
+alias gco='git checkout'
+alias gcb='git checkout -b'    # Создать ветку и переключиться: gcb feature/new
+alias gb='git branch'
+alias gbd='git branch -d'      # Удалить ветку
+
+# Красивое дерево истории (аналог oh-my-zsh 'glol')
+alias glol="git log --graph --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'"
+
+# Сокращенная версия (только хеш и сообщение)
+alias glo="git log --oneline --decorate"
+
+# Работа со stash (временный карман)
+alias gsta='git stash push'
+alias gstp='git stash pop'     # Вернуть спрятанное
+alias gstl='git stash list'
+
+# Исправления
+alias grhh='git reset --hard'  # ОПАСНО: сбросить всё до последнего коммита
+alias gunwip='git log -n 1 | grep -q -c "wip" && git reset HEAD~1' # Отменить последний локальный коммит (если забыл что-то)
+
+# Автозапуск TMUX (Финальный блок)
+# Используем -A для мгновенного подключения к сессии 'main'
+if [[ -z "$TMUX" && -z "$VSCODE_PID" && -z "$SSH_TTY" && $- == *i* ]]; then
+    exec tmux new-session -A -s main
+fi
+
+# zcompile ~/.p10k.zsh
+# zcompile ~/.zshrc
+
+# zinit self-update  # Обновит и перекомпилирует сам Zinit
+# zinit compile --all # Скомпилирует все плагины
+
+# time zsh -i -c exit
+# zsh -i -c exit  0.02s user 0.02s system 90% cpu 0.040 total
+
+# zprof
