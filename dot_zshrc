@@ -2,9 +2,22 @@
 
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 #  Мгновенная отрисовка интерфейса (должна быть первой!)
-# if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-#   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-# fi
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+# Автозапуск TMUX
+# Используем -A для мгновенного подключения к сессии 'main'
+if [[ -z "$TMUX" && -z "$VSCODE_PID" && -z "$SSH_TTY" && $- == *i* ]]; then
+    exec tmux -2 new-session -A -s main
+fi
+
+autoload -Uz compinit
+compinit -C
+( zcompile ~/.zcompdump ) &!
+
+bindkey -v
+export KEYTIMEOUT=1
 
 # Менеджер плагинов Zinit
 ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
@@ -15,34 +28,6 @@ zinit ice depth"1" compile
 zinit light romkatv/powerlevel10k
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-# Фоновая загрузка тяжелых плагинов (lucid wait'0')
-# zinit ice lucid wait'0'
-# zinit snippet OMZ::plugins/sudo
-
-# Use aliases instead of this plugin
-# zinit ice lucid wait'0' compile
-# zinit snippet OMZ::plugins/git
-
-# Vi-mode конфигурация
-function zvm_config() {
-  ZSH_VI_MODE_CURSOR_STYLE_ENABLED=false
-  ZVM_LINE_INIT_MODE=$ZVM_MODE_INSERT
-  ZVM_VI_INSERT_ESCAPE_BINDKEY=jk
-  ZVM_KEYTIMEOUT=0.05
-}
-
-function zvm_after_init() {
-  zvm_bindkey vicmd 'H' vi-beginning-of-line
-  zvm_bindkey vicmd 'L' vi-end-of-line
-
-  zvm_bindkey viins '^P' history-substring-search-up
-  zvm_bindkey viins '^N' history-substring-search-down
-}
-
-zinit ice lucid depth=1 compile
-zinit light jeffreytse/zsh-vi-mode
-
-## Загрузка плагина zsh-history-substring-search
 zinit ice lucid wait'0a' atload="_history_substring_search_config" compile
 zinit light zsh-users/zsh-history-substring-search
 
@@ -92,6 +77,8 @@ zstyle ':completion:*:commands' fzf-preview 'man $word'
 # Цвета для fzf-tab (соответствие теме)
 zstyle ':fzf-tab:*' fzf-flags $(echo $FZF_DEFAULT_OPTS)
 
+# Улучшенный формат отображения fzf
+# export FZF_CTRL_R_OPTS="--preview 'echo {}' --preview-window down:3:hidden:wrap --bind '?:toggle-preview'"
 
 zinit ice lucid wait'0d' compile
 zinit light ajeetdsouza/zoxide
@@ -103,18 +90,46 @@ zinit ice lucid wait'0e' compile
 zinit light eza-community/eza
 
 # Алиасы для замены
-alias ls='eza --icons'
-alias ll='eza --icons -l --git'
-alias la='eza --icons -la --git'
-alias tree='eza --icons --tree'
+# alias ls='eza --icons'
+# alias ll='eza --icons -l --git'
+# alias la='eza --icons -la --git'
+# alias tree='eza --icons --tree'
 
 zinit wait'0f' lucid compile for \
-  atinit"ZINIT[COMPINIT_OPTS]=-C; zicompinit; zicdreplay" \
-    zdharma-continuum/fast-syntax-highlighting \
-  blockf \
-    zsh-users/zsh-completions \
-  atload"!_zsh_autosuggest_start" \
-    zsh-users/zsh-autosuggestions
+    blockf \
+        zsh-users/zsh-completions \
+    atload"!_zsh_autosuggest_start" \
+        zsh-users/zsh-autosuggestions \
+
+zinit wait'0f' lucid compile for \
+    atinit"zicdreplay" \
+        zdharma-continuum/fast-syntax-highlighting
+
+# bindkey -v
+# export KEYTIMEOUT=1
+
+# # Vi-mode конфигурация
+function zvm_config() {
+  ZVM_INIT_MODE=sourcing
+  ZSH_VI_MODE_CURSOR_STYLE_ENABLED=false
+  ZVM_LINE_INIT_MODE=$ZVM_MODE_INSERT
+  ZVM_VI_INSERT_ESCAPE_BINDKEY=jk
+  ZVM_KEYTIMEOUT=0.05
+}
+
+function zvm_after_init() {
+  zvm_bindkey vicmd 'H' vi-beginning-of-line
+  zvm_bindkey vicmd 'L' vi-end-of-line
+
+  zvm_bindkey viins '^R' fzf-history-widget
+
+  zvm_bindkey viins '^P' history-substring-search-up
+  zvm_bindkey viins '^N' history-substring-search-down
+}
+
+zinit ice wait'1' lucid depth=1 compile
+# zinit ice lucid depth=1 compile
+zinit light jeffreytse/zsh-vi-mode
 
 # PATH и NIX Перенесено в .zprofile
 
@@ -202,13 +217,7 @@ alias ....='cd ../../..'
 alias ip='ip -color=auto'
 alias grep='grep --color=auto'
 alias df='duf' # Если установлен duf (современный аналог df)
-alias cat='bat' # Ты уже используешь bat в превью, можно сделать основным [cite: 7]
-
-# Автозапуск TMUX (Финальный блок)
-# Используем -A для мгновенного подключения к сессии 'main'
-if [[ -z "$TMUX" && -z "$VSCODE_PID" && -z "$SSH_TTY" && $- == *i* ]]; then
-    exec tmux -2 new-session -A -s main
-fi
+alias cat='bat' # Ты уже используешь bat в превью, можно сделать основным
 
 # zcompile ~/.p10k.zsh
 # zcompile ~/.zshrc
@@ -219,4 +228,17 @@ fi
 # time zsh -i -c exit
 # zsh -i -c exit  0.02s user 0.02s system 90% cpu 0.040 total
 
+# zcompile ~/.zshrc
+# zcompile ~/.p10k.zsh
+# rm ~/.zcompdump* && exec zsh
+
+# --- Автоматическая фоновая компиляция конфигов ---
+(
+    for conf in ~/.zshrc ~/.zlogin ~/.zprofile ~/.p10k.zsh; do
+        if [[ "$conf" -nt "$conf.zwc" || ! -f "$conf.zwc" ]]; then
+            zcompile "$conf"
+        fi
+    done
+) &!
+ 
 # zprof
